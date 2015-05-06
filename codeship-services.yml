@@ -1,0 +1,7 @@
+linux_amd64:
+  build:
+    image: pedge/goledge
+    dockerfile_path: Dockerfile
+  environment:
+    GOOS: linux
+    GOARCH: amd64

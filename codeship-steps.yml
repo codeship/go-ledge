@@ -1,0 +1,7 @@
+- type: parallel
+  services:
+  - linux_amd64
+  steps:
+  - command: make test
+  - command: make lint
+  - command: make cov
