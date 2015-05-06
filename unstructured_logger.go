@@ -129,7 +129,7 @@ func (u *unstructuredLogger) value(s string) string {
 	}
 	fieldKeys := make([]string, len(u.fields))
 	i := 0
-	for key, _ := range u.fields {
+	for key := range u.fields {
 		fieldKeys[i] = key
 		i++
 	}
