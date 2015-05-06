@@ -1,5 +1,6 @@
 .PHONY: \
 	all \
+	testall \
 	deps \
 	updatedeps \
 	testdeps \
@@ -12,6 +13,8 @@
 	clean
 
 all: test install
+
+testall: cov lint test
 
 deps:
 	go get -d -v ./...
