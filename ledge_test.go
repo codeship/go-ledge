@@ -1,14 +1,14 @@
 package ledge
 
 import (
-	"io"
-	"os"
+	"io/ioutil"
 	"testing"
 	"time"
 )
 
 var (
-	testWriter        = io.Writer(os.Stdout)
+	//testWriter        = io.Writer(os.Stdout)
+	testWriter        = ioutil.Discard
 	testSpecification = &Specification{
 		ContextTypes: []Context{
 			TestRequestID(""),
