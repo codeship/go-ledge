@@ -20,15 +20,21 @@ func newReflectTypeProvider(
 	contextReflectTypes := make(map[reflect.Type]bool)
 	eventReflectTypes := make(map[reflect.Type]bool)
 	if specification != nil {
-		if err := addToKeyToReflectType(contextKeyToReflectType, contextReflectTypes, specification.ContextTypes); err != nil {
-			return nil, err
+		for _, t := range specification.ContextTypes {
+			if err := addToKeyToReflectType(contextKeyToReflectType, contextReflectTypes, t); err != nil {
+				return nil, err
+			}
 		}
-		if err := addToKeyToReflectType(eventKeyToReflectType, eventReflectTypes, specification.EventTypes); err != nil {
-			return nil, err
+		for _, t := range specification.EventTypes {
+			if err := addToKeyToReflectType(eventKeyToReflectType, eventReflectTypes, t); err != nil {
+				return nil, err
+			}
 		}
 	}
-	if err := addToKeyToReflectType(eventKeyToReflectType, eventReflectTypes, DefaultEventTypes); err != nil {
-		return nil, err
+	for _, t := range DefaultEventTypes {
+		if err := addToKeyToReflectType(eventKeyToReflectType, eventReflectTypes, t); err != nil {
+			return nil, err
+		}
 	}
 	return &reflectTypeProvider{
 		contextKeyToReflectType,
@@ -69,15 +75,13 @@ func (r *reflectTypeProvider) validateReflectType(m map[reflect.Type]bool, refle
 	return nil
 }
 
-func addToKeyToReflectType(keyToReflectType map[string]reflect.Type, reflectTypes map[reflect.Type]bool, types []interface{}) error {
-	for _, t := range types {
-		reflectType := reflect.TypeOf(t)
-		key, err := getFullyQualifiedName(reflectType)
-		if err != nil {
-			return err
-		}
-		keyToReflectType[key] = reflectType
-		reflectTypes[reflectType] = true
+func addToKeyToReflectType(keyToReflectType map[string]reflect.Type, reflectTypes map[reflect.Type]bool, t interface{}) error {
+	reflectType := reflect.TypeOf(t)
+	key, err := getFullyQualifiedName(reflectType)
+	if err != nil {
+		return err
 	}
+	keyToReflectType[key] = reflectType
+	reflectTypes[reflectType] = true
 	return nil
 }

@@ -10,12 +10,12 @@ import (
 var (
 	testWriter        = io.Writer(os.Stdout)
 	testSpecification = &Specification{
-		ContextTypes: []interface{}{
+		ContextTypes: []Context{
 			TestRequestID(""),
 			TestInteger(0),
 			TestContextBar{},
 		},
-		EventTypes: []interface{}{
+		EventTypes: []Event{
 			TestEventFoo{},
 			&TestEventFooPtr{},
 		},

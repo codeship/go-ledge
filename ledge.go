@@ -31,7 +31,7 @@ var (
 
 	// DefaultEventTypes are the Event types included with every Logger, EntryReader,
 	// and BlockingEntryReader by default. These are used for the UnstructuredLogger.
-	DefaultEventTypes = []interface{}{
+	DefaultEventTypes = []Event{
 		Debug(""),
 		Error(""),
 		Fatal(""),
@@ -246,17 +246,17 @@ type Encoder interface {
 //
 //		var (
 //			AppSpecifiation = &Specification{
-//				ContextTypes: []interface{}{
+//				ContextTypes: []Context{
 //					RequestId(""),
 //				},
-//				EventTypes: []interface{}{
+//				EventTypes: []Event{
 //					&FooEvent{},
 //				},
 //			}
 //		)
 type Specification struct {
-	ContextTypes []interface{}
-	EventTypes   []interface{}
+	ContextTypes []Context
+	EventTypes   []Event
 }
 
 // LoggerOptions specifies the options to be used when creating a Logger.
