@@ -352,12 +352,9 @@ type BlockingEntryReader interface {
 }
 
 // NewBlockingEntryReader returns a new BlockingEntryReader.
-func NewBlockingEntryReader(reader io.Reader, unmarshaller Unmarshaller, decoder Decoder, options EntryReaderOptions) (BlockingEntryReader, error) {
+func NewBlockingEntryReader(entryReader EntryReader) BlockingEntryReader {
 	return newBlockingEntryReader(
-		reader,
-		unmarshaller,
-		decoder,
-		options,
+		entryReader,
 	)
 }
 

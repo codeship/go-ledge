@@ -21,7 +21,7 @@ func newFakeLogger(
 	if err != nil {
 		return nil, err
 	}
-	blockingEntryReader, err := NewBlockingEntryReader(
+	entryReader, err := NewEntryReader(
 		buffer,
 		unmarshaller,
 		RPCDecoder,
@@ -47,7 +47,7 @@ func newFakeLogger(
 	}
 	return &fakeLogger{
 		logger,
-		blockingEntryReader,
+		NewBlockingEntryReader(entryReader),
 		fakeTimer,
 	}, nil
 }

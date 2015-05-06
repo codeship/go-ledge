@@ -1,32 +1,17 @@
 package ledge
 
-import (
-	"fmt"
-	"io"
-)
+import "fmt"
 
 type blockingEntryReader struct {
 	entryReader EntryReader
 }
 
 func newBlockingEntryReader(
-	reader io.Reader,
-	unmarshaller Unmarshaller,
-	decoder Decoder,
-	options EntryReaderOptions,
-) (*blockingEntryReader, error) {
-	entryReader, err := newEntryReader(
-		reader,
-		unmarshaller,
-		decoder,
-		options,
-	)
-	if err != nil {
-		return nil, err
-	}
+	entryReader EntryReader,
+) *blockingEntryReader {
 	return &blockingEntryReader{
 		entryReader,
-	}, nil
+	}
 }
 
 func (b *blockingEntryReader) Entries() ([]*Entry, error) {
