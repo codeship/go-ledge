@@ -208,5 +208,6 @@ func (b *baseJSONMarshaller) Marshal(entry *Entry) ([]byte, error) {
 	}
 	m[b.jsonKeys.eventType] = eventKey
 	m[eventKey] = entry.Event
+	m[b.jsonKeys.writerOutput] = string(entry.WriterOutput)
 	return json.Marshal(m)
 }

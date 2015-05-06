@@ -144,6 +144,7 @@ func (l *logger) write(entry *Entry) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	q := p
 	if l.options.WriteNewline {
 		buffer := bytes.NewBuffer(nil)
 		if _, err := buffer.Write(p); err != nil {
@@ -152,7 +153,7 @@ func (l *logger) write(entry *Entry) (int, error) {
 		if _, err := buffer.WriteRune('\n'); err != nil {
 			return 0, err
 		}
-		p = buffer.Bytes()
+		q = buffer.Bytes()
 	}
 	// TODO(pedge): does this work?
 	if entry.Level == LevelPanic {
@@ -160,9 +161,9 @@ func (l *logger) write(entry *Entry) (int, error) {
 	}
 	if l.include(entry) {
 		if l.options.Encoder != nil {
-			return l.options.Encoder.Encode(l.writer, p)
+			return l.options.Encoder.Encode(l.writer, q)
 		}
-		return l.writer.Write(p)
+		return l.writer.Write(q)
 	}
 	// TODO(pedge): does this work?
 	if entry.Level == LevelFatal {

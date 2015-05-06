@@ -20,5 +20,8 @@ func (e *entryWriter) Write(p []byte) (int, error) {
 	if p == nil || len(p) == 0 {
 		return 0, nil
 	}
-	return e.logger.write(e.logger.getEntry(e.baseEntry, p))
+	if _, err := e.logger.write(e.logger.getEntry(e.baseEntry, p)); err != nil {
+		return 0, err
+	}
+	return len(p), nil
 }
