@@ -259,6 +259,11 @@ type Specification struct {
 	EventTypes   []Event
 }
 
+// MergeSpecifications merges multiple Specifications into a single specification.
+func MergeSpecifications(specifications ...*Specification) *Specification {
+	return mergeSpecifications(specifications)
+}
+
 // LoggerOptions specifies the options to be used when creating a Logger.
 type LoggerOptions struct {
 	// IDAllocator specifies an alternate IDAllocator to use.

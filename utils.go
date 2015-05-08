@@ -6,6 +6,31 @@ import (
 	"reflect"
 )
 
+func mergeSpecifications(specifications []*Specification) *Specification {
+	contextReflectTypeToContext := make(map[reflect.Type]Context)
+	eventReflectTypeToEvent := make(map[reflect.Type]Event)
+	for _, specification := range specifications {
+		for _, contextType := range specification.ContextTypes {
+			contextReflectTypeToContext[reflect.TypeOf(contextType)] = contextType
+		}
+		for _, eventType := range specification.EventTypes {
+			eventReflectTypeToEvent[reflect.TypeOf(eventType)] = eventType
+		}
+	}
+	var contexts []Context
+	var events []Event
+	for _, context := range contextReflectTypeToContext {
+		contexts = append(contexts, context)
+	}
+	for _, event := range eventReflectTypeToEvent {
+		events = append(events, event)
+	}
+	return &Specification{
+		ContextTypes: contexts,
+		EventTypes:   events,
+	}
+}
+
 func getFullyQualifiedName(reflectType reflect.Type) (string, error) {
 	buffer := bytes.NewBuffer(nil)
 	for reflectType.Kind() == reflect.Ptr {
