@@ -62,7 +62,15 @@ func (f *fakeLogger) CheckEntriesEqual(
 		return err
 	}
 	if len(expected) != len(entries) {
-		return fmt.Errorf("ledge: expected %d entries, got %d", len(expected), len(entries))
+		expectedStrings := make([]string, len(expected))
+		for i, elem := range expected {
+			expectedStrings[i] = fmt.Sprintf("%+v", elem)
+		}
+		entryStrings := make([]string, len(entries))
+		for i, elem := range entries {
+			entryStrings[i] = fmt.Sprintf("%+v", elem)
+		}
+		return fmt.Errorf("ledge: expected %v, got %v", expectedStrings, entryStrings)
 	}
 	for i, elem := range expected {
 		if !entriesEqual(elem, entries[i], checkID, checkTime) {
