@@ -46,7 +46,7 @@ vet: testdeps generate
 	go get -v golang.org/x/tools/cmd/vet
 	go vet ./...
 
-errcheck:
+errcheck: testdeps generate
 	go get -v github.com/kisielk/errcheck
 	errcheck ./...
 
