@@ -2,6 +2,7 @@ package ledge
 
 import (
 	"fmt"
+	"io"
 	"sort"
 	"strings"
 )
@@ -123,6 +124,22 @@ func (u *unstructuredLogger) Warnln(args ...interface{}) {
 	u.logger.Warn(Warn(u.value(fmt.Sprintln(args...))))
 }
 
+func (u *unstructuredLogger) DebugWriter() io.Writer {
+	return u.logger.DebugWriter(Debug(u.value("")))
+}
+
+func (u *unstructuredLogger) ErrorWriter() io.Writer {
+	return u.logger.ErrorWriter(Error(u.value("")))
+}
+
+func (u *unstructuredLogger) InfoWriter() io.Writer {
+	return u.logger.InfoWriter(Info(u.value("")))
+}
+
+func (u *unstructuredLogger) WarnWriter() io.Writer {
+	return u.logger.WarnWriter(Warn(u.value("")))
+}
+
 func (u *unstructuredLogger) value(s string) string {
 	if len(u.fields) == 0 {
 		return s
@@ -138,5 +155,12 @@ func (u *unstructuredLogger) value(s string) string {
 	for _, key := range fieldKeys {
 		slice = append(slice, fmt.Sprintf("%s:%v", key, u.fields[key]))
 	}
-	return fmt.Sprintf("{%s} %s", strings.Join(slice, " "), s)
+	fieldsString := strings.Join(slice, " ")
+	if fieldsString != "" {
+		fieldsString = fmt.Sprintf("{%s}", fieldsString)
+	}
+	if s == "" {
+		return fmt.Sprintf("%s", fieldsString)
+	}
+	return fmt.Sprintf("%s %s", fieldsString, s)
 }

@@ -119,6 +119,19 @@ type UnstructuredLogger interface {
 	Warnf(format string, args ...interface{})
 	// Warnln prints a Warn event, analogous to fmt.Sprintln.
 	Warnln(args ...interface{})
+
+	// DebugWriter returns a new io.Writer that will log output to the writer
+	// inside the WriterOutput field of an Entry at the Debug Level.
+	DebugWriter() io.Writer
+	// ErrorWriter returns a new io.Writer that will log output to the writer
+	// inside the WriterOutput field of an Entry at the Error Level.
+	ErrorWriter() io.Writer
+	// InfoWriter returns a new io.Writer that will log output to the writer
+	// inside the WriterOutput field of an Entry at the Info Level.
+	InfoWriter() io.Writer
+	// WarnWriter returns a new io.Writer that will log output to the writer
+	// inside the WriterOutput field of an Entry at the Warn Level.
+	WarnWriter() io.Writer
 }
 
 // Logger is the main logging interface. A Logger logs Events with given Contexts as Entry objects.

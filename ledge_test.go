@@ -66,6 +66,8 @@ func TestLoggerPrintToStdout(t *testing.T) {
 		logger.WithContext(TestInteger(10)).Info(&TestEventFooPtr{"one", 2})
 		logger.WithContext(TestContextBar{"one", 2}).Unstructured().Info("hello")
 		logger.WithContext(TestContextBar{"one", 2}).Unstructured().WithField("key", "value").Info("hello")
+		logger.Unstructured().WithField("key", "value").Info("")
+		logger.Unstructured().Info("")
 	}
 }
 
@@ -85,6 +87,10 @@ func TestFakeLogger(t *testing.T) {
 	fakeLogger.WithContext(TestContextBar{"one", 2}).Unstructured().Info("hello")
 	fakeLogger.AddTimeSec(100)
 	fakeLogger.WithContext(TestContextBar{"one", 2}).Unstructured().WithField("key", "value").Info("hello")
+	fakeLogger.AddTimeSec(100)
+	fakeLogger.Unstructured().WithField("key", "value").Info("")
+	fakeLogger.AddTimeSec(100)
+	fakeLogger.Unstructured().Info("")
 
 	if err := fakeLogger.CheckEntriesEqual(
 		[]*Entry{
@@ -135,6 +141,18 @@ func TestFakeLogger(t *testing.T) {
 					TestContextBar{"one", 2},
 				},
 				Event: Info("{key:value} hello"),
+			},
+			&Entry{
+				ID:    "6",
+				Time:  time.Unix(600, 0),
+				Level: LevelInfo,
+				Event: Info("{key:value}"),
+			},
+			&Entry{
+				ID:    "7",
+				Time:  time.Unix(700, 0),
+				Level: LevelInfo,
+				Event: Info(""),
 			},
 		},
 		true,
