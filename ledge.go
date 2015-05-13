@@ -2,6 +2,7 @@ package ledge
 
 import (
 	"io"
+	"sync"
 	"time"
 )
 
@@ -32,14 +33,95 @@ var (
 	// DefaultEventTypes are the Event types included with every Logger, EntryReader,
 	// and BlockingEntryReader by default. These are used for the UnstructuredLogger.
 	DefaultEventTypes = []Event{
-		Debug(""),
-		Error(""),
-		Fatal(""),
-		Info(""),
-		Panic(""),
-		Warn(""),
+		DebugEvent(""),
+		ErrorEvent(""),
+		FatalEvent(""),
+		InfoEvent(""),
+		PanicEvent(""),
+		WarnEvent(""),
 	}
+
+	globalLogger Logger
+	globalLock   = &sync.Mutex{}
 )
+
+// SetLogger sets the global Logger. This must be called before any global logging calls.
+func SetLogger(logger Logger) {
+	globalLock.Lock()
+	defer globalLock.Unlock()
+
+	globalLogger = logger
+}
+
+// WithContext returns a new Logger with the given Context attached. If the Context
+// was not registered in the Specification on Logger creation, this method will panic.
+func WithContext(context Context) Logger {
+	return globalLogger.WithContext(context)
+}
+
+// Unstructured returns the associated UnstructuredLogger. The methods on UnstructuredLogger
+// are not directly included on Logger to discourage use of these methods.
+func Unstructured() UnstructuredLogger {
+	return globalLogger.Unstructured()
+}
+
+// Debug prints an event at the Debug Level.
+func Debug(event Event) {
+	globalLogger.Debug(event)
+}
+
+// Error prints an event at the Error Level.
+func Error(event Event) {
+	globalLogger.Error(event)
+}
+
+// Fatal prints an event at the Fatal Level.
+func Fatal(event Event) {
+	globalLogger.Fatal(event)
+}
+
+// Info prints an event at the Info Level.
+func Info(event Event) {
+	globalLogger.Info(event)
+}
+
+// Panic prints an event at the Panic Level.
+func Panic(event Event) {
+	globalLogger.Panic(event)
+}
+
+// Warn prints an event at the Warn Level.
+func Warn(event Event) {
+	globalLogger.Warn(event)
+}
+
+// DebugWriter returns a new io.Writer that will log output to the writer
+// inside the WriterOutput field of an Entry, using the associated Event,
+// at the Debug Level.
+func DebugWriter(event Event) io.Writer {
+	return globalLogger.DebugWriter(event)
+}
+
+// ErrorWriter returns a new io.Writer that will log output to the writer
+// inside the WriterOutput field of an Entry, using the associated Event,
+// at the Error Level.
+func ErrorWriter(event Event) io.Writer {
+	return globalLogger.ErrorWriter(event)
+}
+
+// InfoWriter returns a new io.Writer that will log output to the writer
+// inside the WriterOutput field of an Entry, using the associated Event,
+// at the Info Level.
+func InfoWriter(event Event) io.Writer {
+	return globalLogger.InfoWriter(event)
+}
+
+// WarnWriter returns a new io.Writer that will log output to the writer
+// inside the WriterOutput field of an Entry, using the associated Event,
+// at the Warn Level.
+func WarnWriter(event Event) io.Writer {
+	return globalLogger.WarnWriter(event)
+}
 
 // A Context is attached to a Logger and included as part of every Entry a Logger outputs.
 type Context interface{}
@@ -47,23 +129,23 @@ type Context interface{}
 // An Event is outputted by a Logger.
 type Event interface{}
 
-// Debug is the Event for Debug statements with an UnstructuredLogger.
-type Debug string
+// DebugEvent is the Event for Debug statements with an UnstructuredLogger.
+type DebugEvent string
 
-// Error is the Event for Error statements with an UnstructuredLogger.
-type Error string
+// ErrorEvent is the Event for Error statements with an UnstructuredLogger.
+type ErrorEvent string
 
-// Fatal is the Event for Fatal statements with an UnstructuredLogger.
-type Fatal string
+// FatalEvent is the Event for Fatal statements with an UnstructuredLogger.
+type FatalEvent string
 
-// Info is the Event for Info statements with an UnstructuredLogger.
-type Info string
+// InfoEvent is the Event for Info statements with an UnstructuredLogger.
+type InfoEvent string
 
-// Panic is the Event for Panic statements with an UnstructuredLogger.
-type Panic string
+// PanicEvent is the Event for Panic statements with an UnstructuredLogger.
+type PanicEvent string
 
-// Warn is the Event for Warn statements with an UnstructuredLogger.
-type Warn string
+// WarnEvent is the Event for Warn statements with an UnstructuredLogger.
+type WarnEvent string
 
 // Fields are attached to an UnstructuredLogger and included as part of every statement outputted.
 type Fields map[string]interface{}

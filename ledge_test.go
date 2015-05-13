@@ -131,7 +131,7 @@ func TestFakeLogger(t *testing.T) {
 				Contexts: []Context{
 					TestContextBar{"one", 2},
 				},
-				Event: Info("hello"),
+				Event: InfoEvent("hello"),
 			},
 			&Entry{
 				ID:    "5",
@@ -140,19 +140,19 @@ func TestFakeLogger(t *testing.T) {
 				Contexts: []Context{
 					TestContextBar{"one", 2},
 				},
-				Event: Info("{key:value} hello"),
+				Event: InfoEvent("{key:value} hello"),
 			},
 			&Entry{
 				ID:    "6",
 				Time:  time.Unix(600, 0),
 				Level: LevelInfo,
-				Event: Info("{key:value}"),
+				Event: InfoEvent("{key:value}"),
 			},
 			&Entry{
 				ID:    "7",
 				Time:  time.Unix(700, 0),
 				Level: LevelInfo,
-				Event: Info(""),
+				Event: InfoEvent(""),
 			},
 		},
 		true,
