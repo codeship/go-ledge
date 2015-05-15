@@ -53,9 +53,7 @@ func TestLoggerPrintToStdout(t *testing.T) {
 			testWriter,
 			marshaller,
 			testSpecification,
-			LoggerOptions{
-				WriteNewline: true,
-			},
+			LoggerOptions{},
 		)
 		if err != nil {
 			t.Fatal(err)

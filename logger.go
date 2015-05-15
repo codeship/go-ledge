@@ -144,24 +144,17 @@ func (l *logger) write(entry *Entry) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	q := p
-	if l.options.WriteNewline {
-		buffer := bytes.NewBuffer(nil)
-		if _, err := buffer.Write(p); err != nil {
-			return 0, err
-		}
-		if _, err := buffer.WriteRune('\n'); err != nil {
-			return 0, err
-		}
-		q = buffer.Bytes()
-	}
 	// TODO(pedge): does this work?
 	if entry.Level == LevelPanic {
 		panic(string(p))
 	}
 	if l.include(entry) {
 		if l.options.Encoder != nil {
-			return l.options.Encoder.Encode(l.writer, q)
+			return l.options.Encoder.Encode(l.writer, p)
+		}
+		q, err := l.addNewline(p)
+		if err != nil {
+			return 0, err
 		}
 		return l.writer.Write(q)
 	}
@@ -174,4 +167,15 @@ func (l *logger) write(entry *Entry) (int, error) {
 
 func (l *logger) include(entry *Entry) bool {
 	return includeEntry(l.options.Filters, entry)
+}
+
+func (l *logger) addNewline(p []byte) ([]byte, error) {
+	buffer := bytes.NewBuffer(nil)
+	if _, err := buffer.Write(p); err != nil {
+		return nil, err
+	}
+	if _, err := buffer.WriteRune('\n'); err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
 }

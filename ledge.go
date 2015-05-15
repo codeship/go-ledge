@@ -371,10 +371,8 @@ type LoggerOptions struct {
 	Filters []Filter
 	// Encoder specifies an Encoder to use.
 	// If not specified, no encoder will be used and marshalled Entry objects
-	// will be directed printed to the Logger's io.Writer.
+	// will be directed printed to the Logger's io.Writer with a newline added.
 	Encoder Encoder
-	// WriteNewline specifies whether to write a '\n' at the end of a marshalled Entry Object.
-	WriteNewline bool
 }
 
 // NewLogger creates a new Logger.
