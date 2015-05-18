@@ -192,6 +192,9 @@ func TestRoundTrip(t *testing.T) {
 	logger.Unstructured().WithField("key", "value").Info("")
 	timer.AddTimeSec(100)
 	logger.Unstructured().Info("")
+	timer.AddTimeSec(100)
+	byteString := string([]byte{127})
+	logger.Unstructured().Info(byteString)
 
 	unmarshaller, err := NewJSONUnmarshaller(testSpecification)
 	if err != nil {
@@ -270,6 +273,12 @@ func TestRoundTrip(t *testing.T) {
 				Time:  time.Unix(700, 0),
 				Level: LevelInfo,
 				Event: InfoEvent(""),
+			},
+			&Entry{
+				ID:    "8",
+				Time:  time.Unix(800, 0),
+				Level: LevelInfo,
+				Event: InfoEvent(byteString),
 			},
 		},
 		true,
