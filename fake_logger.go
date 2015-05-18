@@ -61,23 +61,7 @@ func (f *fakeLogger) CheckEntriesEqual(
 	if err != nil {
 		return err
 	}
-	if len(expected) != len(entries) {
-		expectedStrings := make([]string, len(expected))
-		for i, elem := range expected {
-			expectedStrings[i] = fmt.Sprintf("%+v", elem)
-		}
-		entryStrings := make([]string, len(entries))
-		for i, elem := range entries {
-			entryStrings[i] = fmt.Sprintf("%+v", elem)
-		}
-		return fmt.Errorf("ledge: expected %v, got %v", expectedStrings, entryStrings)
-	}
-	for i, elem := range expected {
-		if !entriesEqual(elem, entries[i], checkID, checkTime) {
-			return fmt.Errorf("ledge: expected %+v, got %+v", elem, entries[i])
-		}
-	}
-	return nil
+	return checkEntriesEqual(entries, expected, checkID, checkTime)
 }
 
 type fakeIDAllocator struct {

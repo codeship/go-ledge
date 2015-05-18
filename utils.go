@@ -77,6 +77,31 @@ func includeEntry(filters []Filter, entry *Entry) bool {
 	return true
 }
 
+func checkEntriesEqual(
+	entries []*Entry,
+	expected []*Entry,
+	checkID bool,
+	checkTime bool,
+) error {
+	if len(expected) != len(entries) {
+		expectedStrings := make([]string, len(expected))
+		for i, elem := range expected {
+			expectedStrings[i] = fmt.Sprintf("%+v", elem)
+		}
+		entryStrings := make([]string, len(entries))
+		for i, elem := range entries {
+			entryStrings[i] = fmt.Sprintf("%+v", elem)
+		}
+		return fmt.Errorf("ledge: expected %v, got %v", expectedStrings, entryStrings)
+	}
+	for i, elem := range expected {
+		if !entriesEqual(elem, entries[i], checkID, checkTime) {
+			return fmt.Errorf("ledge: expected %+v, got %+v", elem, entries[i])
+		}
+	}
+	return nil
+}
+
 // reflect.DeepEqual does not work on linux for time.Time
 func entriesEqual(one *Entry, two *Entry, checkID bool, checkTime bool) bool {
 	if checkID && one.ID != two.ID {
