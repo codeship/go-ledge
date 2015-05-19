@@ -40,7 +40,7 @@ func (r *reflectTypeHandler) getEvent(objectType string, object interface{}) (in
 func (r *reflectTypeHandler) getObject(reflectType reflect.Type, object interface{}) (interface{}, error) {
 	if data, ok := object.([]byte); ok {
 		objectPtr := reflect.New(reflectType).Interface()
-		if err := json.Unmarshal(data, objectPtr); err != nil {
+		if err := unmarshalBinary(data, objectPtr); err != nil {
 			return nil, err
 		}
 		return reflect.ValueOf(objectPtr).Elem().Interface(), nil

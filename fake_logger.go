@@ -17,7 +17,7 @@ func newFakeLogger(
 	specification *Specification,
 ) (*fakeLogger, error) {
 	buffer := bytes.NewBuffer(nil)
-	unmarshaller, err := NewJSONUnmarshaller(specification)
+	unmarshaller, err := NewProtoUnmarshaller(specification)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func newFakeLogger(
 	fakeTimer := newFakeTimer(0)
 	logger, err := NewLogger(
 		buffer,
-		JSONMarshaller,
+		ProtoMarshaller,
 		specification,
 		LoggerOptions{
 			IDAllocator: fakeIDAllocator,

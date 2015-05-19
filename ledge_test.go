@@ -193,7 +193,7 @@ func TestRoundTrip(t *testing.T) {
 	timer.AddTimeSec(100)
 	logger.Unstructured().Info("")
 	timer.AddTimeSec(100)
-	byteString := string([]byte{127})
+	byteString := string([]byte{128})
 	logger.Unstructured().Info(byteString)
 
 	unmarshaller, err := NewProtoUnmarshaller(testSpecification)

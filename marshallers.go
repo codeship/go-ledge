@@ -229,7 +229,7 @@ func (p *protoMarshaller) Marshal(entry *Entry) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	eventBytes, err := json.Marshal(entry.Event)
+	eventBytes, err := marshalBinary(entry.Event)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +240,7 @@ func (p *protoMarshaller) Marshal(entry *Entry) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		contextBytes, err := json.Marshal(context)
+		contextBytes, err := marshalBinary(context)
 		if err != nil {
 			return nil, err
 		}

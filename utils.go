@@ -2,6 +2,7 @@ package ledge
 
 import (
 	"bytes"
+	"encoding/gob"
 	"fmt"
 	"reflect"
 )
@@ -75,6 +76,18 @@ func includeEntry(filters []Filter, entry *Entry) bool {
 		}
 	}
 	return true
+}
+
+func marshalBinary(object interface{}) ([]byte, error) {
+	buffer := bytes.NewBuffer(nil)
+	if err := gob.NewEncoder(buffer).Encode(object); err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
+}
+
+func unmarshalBinary(p []byte, object interface{}) error {
+	return gob.NewDecoder(bytes.NewBuffer(p)).Decode(object)
 }
 
 func checkEntriesEqual(
