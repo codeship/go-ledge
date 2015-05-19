@@ -166,7 +166,7 @@ func TestRoundTrip(t *testing.T) {
 	timer := newFakeTimer(0)
 	logger, err := NewLogger(
 		buffer,
-		JSONMarshaller,
+		ProtoMarshaller,
 		testSpecification,
 		LoggerOptions{
 			IDAllocator: newFakeIDAllocator(),
@@ -196,7 +196,7 @@ func TestRoundTrip(t *testing.T) {
 	byteString := string([]byte{127})
 	logger.Unstructured().Info(byteString)
 
-	unmarshaller, err := NewJSONUnmarshaller(testSpecification)
+	unmarshaller, err := NewProtoUnmarshaller(testSpecification)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,6 +210,9 @@ func TestRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 	entries, err := NewBlockingEntryReader(entryReader).Entries()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if err := checkEntriesEqual(
 		entries,

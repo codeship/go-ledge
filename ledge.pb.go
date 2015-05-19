@@ -54,21 +54,22 @@ func (x Level) String() string {
 }
 
 type ProtoEntry struct {
-	Id                   string            `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
-	TimeUnixNsec         uint64            `protobuf:"varint,2,opt,name=time_unix_nsec" json:"time_unix_nsec,omitempty"`
-	ContextTypeToContext map[string][]byte `protobuf:"bytes,3,rep,name=context_type_to_context" json:"context_type_to_context,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	EventType            string            `protobuf:"bytes,4,opt,name=event_type" json:"event_type,omitempty"`
-	Event                []byte            `protobuf:"bytes,5,opt,name=event,proto3" json:"event,omitempty"`
-	WriterOutput         []byte            `protobuf:"bytes,6,opt,name=writer_output,proto3" json:"writer_output,omitempty"`
+	Id                       string            `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	TimeUnixNsec             int64             `protobuf:"varint,2,opt,name=time_unix_nsec" json:"time_unix_nsec,omitempty"`
+	Level                    Level             `protobuf:"varint,3,opt,name=level,enum=ledge.Level" json:"level,omitempty"`
+	ContextTypeNameToContext map[string][]byte `protobuf:"bytes,4,rep,name=context_type_name_to_context" json:"context_type_name_to_context,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	EventTypeName            string            `protobuf:"bytes,5,opt,name=event_type_name" json:"event_type_name,omitempty"`
+	Event                    []byte            `protobuf:"bytes,6,opt,name=event,proto3" json:"event,omitempty"`
+	WriterOutput             []byte            `protobuf:"bytes,7,opt,name=writer_output,proto3" json:"writer_output,omitempty"`
 }
 
 func (m *ProtoEntry) Reset()         { *m = ProtoEntry{} }
 func (m *ProtoEntry) String() string { return proto.CompactTextString(m) }
 func (*ProtoEntry) ProtoMessage()    {}
 
-func (m *ProtoEntry) GetContextTypeToContext() map[string][]byte {
+func (m *ProtoEntry) GetContextTypeNameToContext() map[string][]byte {
 	if m != nil {
-		return m.ContextTypeToContext
+		return m.ContextTypeNameToContext
 	}
 	return nil
 }

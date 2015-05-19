@@ -77,7 +77,7 @@ func (r *reflectTypeProvider) validateReflectType(m map[reflect.Type]bool, refle
 
 func addToKeyToReflectType(keyToReflectType map[string]reflect.Type, reflectTypes map[reflect.Type]bool, t interface{}) error {
 	reflectType := reflect.TypeOf(t)
-	key, err := getFullyQualifiedName(reflectType)
+	key, err := getReflectTypeName(reflectType)
 	if err != nil {
 		return err
 	}

@@ -1,27 +1,31 @@
 package ledge
 
 import (
+	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"reflect"
+	"strings"
 	"time"
+
+	"github.com/golang/protobuf/proto"
 )
 
 type jsonUnmarshaller struct {
-	reflectTypeProvider *reflectTypeProvider
-	jsonKeys            *jsonKeys
+	reflectTypeHandler *reflectTypeHandler
+	jsonKeys           *jsonKeys
 }
 
 func newJSONUnmarshaller(
 	specification *Specification,
 	jsonKeys *jsonKeys,
 ) (*jsonUnmarshaller, error) {
-	reflectTypeProvider, err := newReflectTypeProvider(specification)
+	reflectTypeHandler, err := newReflectTypeHandler(specification)
 	if err != nil {
 		return nil, err
 	}
 	return &jsonUnmarshaller{
-		reflectTypeProvider,
+		reflectTypeHandler,
 		jsonKeys,
 	}, nil
 }
@@ -47,10 +51,11 @@ func (j *jsonUnmarshaller) Unmarshal(p []byte) (*Entry, error) {
 	if err != nil {
 		return nil, err
 	}
-	level, err := LevelOf(levelString.(string))
-	if err != nil {
-		return nil, err
+	levelObj, ok := Level_value[strings.ToUpper(levelString.(string))]
+	if !ok {
+		return nil, fmt.Errorf("ledge: no level for name %s", strings.ToUpper(levelString.(string)))
 	}
+	level := Level(levelObj)
 	writerOutputObj, err := j.getAndDeleteKey(m, j.jsonKeys.writerOutput, false)
 	if err != nil {
 		return nil, err
@@ -75,13 +80,13 @@ func (j *jsonUnmarshaller) Unmarshal(p []byte) (*Entry, error) {
 	if err != nil {
 		return nil, err
 	}
-	event, err := j.getEvent(eventType.(string), eventObj)
+	event, err := j.reflectTypeHandler.getEvent(eventType.(string), eventObj)
 	if err != nil {
 		return nil, err
 	}
 	var contexts []Context
 	for contextType, contextObj := range m {
-		context, err := j.getContext(contextType, contextObj)
+		context, err := j.reflectTypeHandler.getContext(contextType, contextObj)
 		if err != nil {
 			return nil, err
 		}
@@ -109,31 +114,51 @@ func (j *jsonUnmarshaller) getAndDeleteKey(m map[string]interface{}, key string,
 	return value, nil
 }
 
-func (j *jsonUnmarshaller) getContext(objectType string, object interface{}) (interface{}, error) {
-	reflectType, err := j.reflectTypeProvider.getContextReflectType(objectType)
-	if err != nil {
-		return nil, err
-	}
-	return j.getObject(reflectType, object)
+type protoUnmarshaller struct {
+	reflectTypeHandler *reflectTypeHandler
 }
 
-func (j *jsonUnmarshaller) getEvent(objectType string, object interface{}) (interface{}, error) {
-	reflectType, err := j.reflectTypeProvider.getEventReflectType(objectType)
+func newProtoUnmarshaller(
+	specification *Specification,
+) (*protoUnmarshaller, error) {
+	reflectTypeHandler, err := newReflectTypeHandler(specification)
 	if err != nil {
 		return nil, err
 	}
-	return j.getObject(reflectType, object)
+	return &protoUnmarshaller{
+		reflectTypeHandler,
+	}, nil
 }
 
-func (j *jsonUnmarshaller) getObject(reflectType reflect.Type, object interface{}) (interface{}, error) {
-	// the below logic is to type the object correctly, do not mess with it
-	data, err := json.Marshal(object)
+func (p *protoUnmarshaller) Unmarshal(buffer []byte) (*Entry, error) {
+	decoder := base64.NewDecoder(base64.StdEncoding, bytes.NewBuffer(buffer))
+	bBuffer := bytes.NewBuffer(nil)
+	if _, err := bBuffer.ReadFrom(decoder); err != nil {
+		return nil, err
+	}
+	b := bBuffer.Bytes()
+	protoEntry := &ProtoEntry{}
+	if err := proto.Unmarshal(b, protoEntry); err != nil {
+		return nil, err
+	}
+	entry := &Entry{
+		ID:           protoEntry.Id,
+		Time:         time.Unix(protoEntry.TimeUnixNsec/int64(time.Second), protoEntry.TimeUnixNsec%int64(time.Second)).UTC(),
+		Level:        protoEntry.Level,
+		Contexts:     make([]Context, 0),
+		WriterOutput: protoEntry.WriterOutput,
+	}
+	event, err := p.reflectTypeHandler.getEvent(protoEntry.EventTypeName, protoEntry.Event)
 	if err != nil {
 		return nil, err
 	}
-	objectPtr := reflect.New(reflectType).Interface()
-	if err := json.Unmarshal(data, objectPtr); err != nil {
-		return nil, err
+	entry.Event = event
+	for contextTypeName, contextBytes := range protoEntry.ContextTypeNameToContext {
+		context, err := p.reflectTypeHandler.getContext(contextTypeName, contextBytes)
+		if err != nil {
+			return nil, err
+		}
+		entry.Contexts = append(entry.Contexts, context)
 	}
-	return reflect.ValueOf(objectPtr).Elem().Interface(), nil
+	return entry, nil
 }

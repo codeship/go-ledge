@@ -31,7 +31,7 @@ func mergeSpecifications(specifications []*Specification) *Specification {
 	}
 }
 
-func getFullyQualifiedName(reflectType reflect.Type) (string, error) {
+func getReflectTypeName(reflectType reflect.Type) (string, error) {
 	buffer := bytes.NewBuffer(nil)
 	for reflectType.Kind() == reflect.Ptr {
 		if _, err := buffer.WriteString("*"); err != nil {
@@ -83,6 +83,10 @@ func checkEntriesEqual(
 	checkID bool,
 	checkTime bool,
 ) error {
+	// TODO(pedge): just change the tests
+	for _, elem := range expected {
+		elem.Time = elem.Time.UTC()
+	}
 	if len(expected) != len(entries) {
 		expectedStrings := make([]string, len(expected))
 		for i, elem := range expected {
@@ -92,36 +96,43 @@ func checkEntriesEqual(
 		for i, elem := range entries {
 			entryStrings[i] = fmt.Sprintf("%+v", elem)
 		}
-		return fmt.Errorf("ledge: expected %v, got %v", expectedStrings, entryStrings)
+		return fmt.Errorf("ledge: expected %v, got %v (length mismatch of %d and %d)", expectedStrings, entryStrings, len(expected), len(entries))
 	}
 	for i, elem := range expected {
-		if !entriesEqual(elem, entries[i], checkID, checkTime) {
-			return fmt.Errorf("ledge: expected %+v, got %+v", elem, entries[i])
+		if err := checkSingleEntriesEqual(elem, entries[i], checkID, checkTime); err != nil {
+			return err
 		}
 	}
 	return nil
 }
 
 // reflect.DeepEqual does not work on linux for time.Time
-func entriesEqual(one *Entry, two *Entry, checkID bool, checkTime bool) bool {
-	if checkID && one.ID != two.ID {
-		return false
+func checkSingleEntriesEqual(expected *Entry, actual *Entry, checkID bool, checkTime bool) error {
+	if checkID && expected.ID != actual.ID {
+		return fmt.Errorf("ledge: expected %+v, got %+v (ID)", expected, actual)
 	}
-	if checkTime && !one.Time.Equal(two.Time) {
-		return false
+	if checkTime && !expected.Time.Equal(actual.Time) {
+		return fmt.Errorf("ledge: expected %+v, got %+v (Time)", expected, actual)
 	}
-	if one.Level != two.Level {
-		return false
+	if expected.Level != actual.Level {
+		return fmt.Errorf("ledge: expected %+v, got %+v (Level)", expected, actual)
 	}
-	if !reflect.DeepEqual(one.Contexts, two.Contexts) {
-		return false
+	if !reflect.DeepEqual(expected.Contexts, actual.Contexts) {
+		if expected.Contexts != nil {
+			if len(expected.Contexts) != 0 || len(actual.Contexts) != 0 {
+				return fmt.Errorf("ledge: expected %+v, got %+v (Contexts)", expected, actual)
+			}
+			if actual.Contexts == nil {
+				return fmt.Errorf("ledge: expected %+v, got %+v (Actual contexts nil, expected not)", expected, actual)
+			}
+			return fmt.Errorf("ledge: expected %+v, got %+v (Contexts)", expected, actual)
+		}
 	}
-	if !reflect.DeepEqual(one.Event, two.Event) {
-		return false
+	if !reflect.DeepEqual(expected.Event, actual.Event) {
+		return fmt.Errorf("ledge: expected %+v, got %+v (Event)", expected, actual)
 	}
-	if !reflect.DeepEqual(one.WriterOutput, two.WriterOutput) {
-		return false
+	if !reflect.DeepEqual(expected.WriterOutput, actual.WriterOutput) {
+		return fmt.Errorf("ledge: expected %+v, got %+v (WriterOutput)", expected, actual)
 	}
-	return true
-
+	return nil
 }

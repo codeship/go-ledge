@@ -25,6 +25,8 @@ var (
 	ShortJSONMarshaller = newShortJSONMarshaller(defaultJSONKeys)
 	// JSONMarshaller is a Marshaller for JSON. It is intended for RPC use.
 	JSONMarshaller = newJSONMarshaller(defaultJSONKeys)
+	// ProtoMarshaller is a Marshaller for Protocol Buffers. It is intended for RPC use.
+	ProtoMarshaller = protoMarshallerInstance
 	// RPCEncoder is an Encoder that wraps data in a simple RPC format.
 	RPCEncoder = rpcEncoderInstance
 	// RPCDecoder is a Decoder that decodes data encoded with RPCEncoder.
@@ -402,6 +404,14 @@ func NewJSONUnmarshaller(specification *Specification) (Unmarshaller, error) {
 	return newJSONUnmarshaller(
 		specification,
 		defaultJSONKeys,
+	)
+}
+
+// NewProtoUnmarshaller returns a new Unmarshaller that unmarshals Entry Objects
+// marshalled with ProtoMarshaller.
+func NewProtoUnmarshaller(specification *Specification) (Unmarshaller, error) {
+	return newProtoUnmarshaller(
+		specification,
 	)
 }
 

@@ -14,9 +14,10 @@ enum Level {
 
 message ProtoEntry {
   string id = 1;
-  uint64 time_unix_nsec = 2;
-  map<string, bytes> context_type_to_context = 3;
-  string event_type = 4;
-  bytes event = 5;
-  bytes writer_output = 6;
+  int64 time_unix_nsec = 2;
+  Level level = 3;
+  map<string, bytes> context_type_name_to_context = 4;
+  string event_type_name = 5;
+  bytes event = 6;
+  bytes writer_output = 7;
 }

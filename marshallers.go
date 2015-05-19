@@ -2,10 +2,13 @@ package ledge
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/golang/protobuf/proto"
 )
 
 const (
@@ -23,6 +26,7 @@ var (
 	}
 	shortJSONReflectTypeKeyProviderInstance = &shortJSONReflectTypeKeyProvider{}
 	longJSONReflectTypeKeyProviderInstance  = &longJSONReflectTypeKeyProvider{}
+	protoMarshallerInstance                 = &protoMarshaller{}
 )
 
 type textMarshaller struct {
@@ -60,7 +64,7 @@ func (t *textMarshaller) Marshal(entry *Entry) ([]byte, error) {
 		}
 	}
 	if !t.options.NoLevel {
-		if _, err := buffer.WriteString(entry.Level.String()); err != nil {
+		if _, err := buffer.WriteString(strings.ToLower(entry.Level.String())); err != nil {
 			return nil, err
 		}
 		if _, err := buffer.WriteString(" "); err != nil {
@@ -137,13 +141,12 @@ func (s *shortJSONReflectTypeKeyProvider) Key(reflectType reflect.Type) (string,
 		return "", fmt.Errorf("ledge: no name for type %v", reflectType)
 	}
 	return name, nil
-
 }
 
 type longJSONReflectTypeKeyProvider struct{}
 
 func (l *longJSONReflectTypeKeyProvider) Key(reflectType reflect.Type) (string, error) {
-	return getFullyQualifiedName(reflectType)
+	return getReflectTypeName(reflectType)
 }
 
 type jsonKeys struct {
@@ -194,7 +197,7 @@ func (b *baseJSONMarshaller) Marshal(entry *Entry) ([]byte, error) {
 	m := make(map[string]interface{})
 	m[b.jsonKeys.id] = entry.ID
 	m[b.jsonKeys.time] = entry.Time.Format(timeFormat)
-	m[b.jsonKeys.level] = entry.Level.String()
+	m[b.jsonKeys.level] = strings.ToLower(entry.Level.String())
 	for _, context := range entry.Contexts {
 		contextKey, err := b.jsonReflectTypeKeyProvider.Key(reflect.TypeOf(context))
 		if err != nil {
@@ -210,4 +213,51 @@ func (b *baseJSONMarshaller) Marshal(entry *Entry) ([]byte, error) {
 	m[eventKey] = entry.Event
 	m[b.jsonKeys.writerOutput] = string(entry.WriterOutput)
 	return json.Marshal(m)
+}
+
+type protoMarshaller struct{}
+
+func (p *protoMarshaller) Marshal(entry *Entry) ([]byte, error) {
+	protoEntry := &ProtoEntry{
+		Id:           entry.ID,
+		TimeUnixNsec: entry.Time.UnixNano(),
+		Level:        entry.Level,
+		ContextTypeNameToContext: make(map[string][]byte),
+		WriterOutput:             entry.WriterOutput,
+	}
+	eventTypeName, err := getReflectTypeName(reflect.TypeOf(entry.Event))
+	if err != nil {
+		return nil, err
+	}
+	eventBytes, err := json.Marshal(entry.Event)
+	if err != nil {
+		return nil, err
+	}
+	protoEntry.EventTypeName = eventTypeName
+	protoEntry.Event = eventBytes
+	for _, context := range entry.Contexts {
+		contextTypeName, err := getReflectTypeName(reflect.TypeOf(context))
+		if err != nil {
+			return nil, err
+		}
+		contextBytes, err := json.Marshal(context)
+		if err != nil {
+			return nil, err
+		}
+		protoEntry.ContextTypeNameToContext[contextTypeName] = contextBytes
+	}
+	b, err := proto.Marshal(protoEntry)
+	if err != nil {
+		return nil, err
+	}
+	buffer := bytes.NewBuffer(nil)
+	encoder := base64.NewEncoder(base64.StdEncoding, buffer)
+	if _, err := encoder.Write(b); err != nil {
+		return nil, err
+	}
+	if err := encoder.Close(); err != nil {
+		return nil, err
+	}
+	bufferBytes := buffer.Bytes()
+	return bufferBytes, nil
 }
