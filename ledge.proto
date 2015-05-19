@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package ledge;
+
+enum ProtoLevel {
+  NONE = 0;
+  DEBUG = 1;
+  INFO = 2;
+  WARN = 3;
+  ERROR = 4;
+  FATAL = 5;
+  PANIC = 6;
+}
+
+message ProtoEntry {
+  string id = 1;
+  uint64 time_unix_nsec = 2;
+  map<string, bytes> context_type_to_context = 3;
+  string event_type = 4;
+  bytes event = 5;
+  bytes writer_output = 6;
+}
