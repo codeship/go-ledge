@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package ledge;
 
-enum ProtoLevel {
+enum Level {
   NONE = 0;
   DEBUG = 1;
   INFO = 2;

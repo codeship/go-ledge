@@ -18,19 +18,19 @@ import proto "github.com/golang/protobuf/proto"
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 
-type ProtoLevel int32
+type Level int32
 
 const (
-	ProtoLevel_NONE  ProtoLevel = 0
-	ProtoLevel_DEBUG ProtoLevel = 1
-	ProtoLevel_INFO  ProtoLevel = 2
-	ProtoLevel_WARN  ProtoLevel = 3
-	ProtoLevel_ERROR ProtoLevel = 4
-	ProtoLevel_FATAL ProtoLevel = 5
-	ProtoLevel_PANIC ProtoLevel = 6
+	Level_NONE  Level = 0
+	Level_DEBUG Level = 1
+	Level_INFO  Level = 2
+	Level_WARN  Level = 3
+	Level_ERROR Level = 4
+	Level_FATAL Level = 5
+	Level_PANIC Level = 6
 )
 
-var ProtoLevel_name = map[int32]string{
+var Level_name = map[int32]string{
 	0: "NONE",
 	1: "DEBUG",
 	2: "INFO",
@@ -39,7 +39,7 @@ var ProtoLevel_name = map[int32]string{
 	5: "FATAL",
 	6: "PANIC",
 }
-var ProtoLevel_value = map[string]int32{
+var Level_value = map[string]int32{
 	"NONE":  0,
 	"DEBUG": 1,
 	"INFO":  2,
@@ -49,8 +49,8 @@ var ProtoLevel_value = map[string]int32{
 	"PANIC": 6,
 }
 
-func (x ProtoLevel) String() string {
-	return proto.EnumName(ProtoLevel_name, int32(x))
+func (x Level) String() string {
+	return proto.EnumName(Level_name, int32(x))
 }
 
 type ProtoEntry struct {
@@ -74,5 +74,5 @@ func (m *ProtoEntry) GetContextTypeToContext() map[string][]byte {
 }
 
 func init() {
-	proto.RegisterEnum("ledge.ProtoLevel", ProtoLevel_name, ProtoLevel_value)
+	proto.RegisterEnum("ledge.Level", Level_name, Level_value)
 }

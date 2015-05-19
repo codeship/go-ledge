@@ -7,18 +7,18 @@ import (
 )
 
 var (
-	// DebugFilter is a Filter that only includes Entries with a Level of at least LevelDebug.
-	DebugFilter = newLevelFilter(LevelDebug)
-	// InfoFilter is a Filter that only includes Entries with a Level of at least LevelInfo.
-	InfoFilter = newLevelFilter(LevelInfo)
-	// WarnFilter is a Filter that only includes Entries with a Level of at least LevelWarn.
-	WarnFilter = newLevelFilter(LevelWarn)
-	// ErrorFilter is a Filter that only includes Entries with a Level of at least LevelError.
-	ErrorFilter = newLevelFilter(LevelError)
-	// FatalFilter is a Filter that only includes Entries with a Level of at least LevelFatal.
-	FatalFilter = newLevelFilter(LevelFatal)
-	// PanicFilter is a Filter that only includes Entries with a Level of at least LevelPanic.
-	PanicFilter = newLevelFilter(LevelPanic)
+	// DebugFilter is a Filter that only includes Entries with a Level of at least Level_DEBUG.
+	DebugFilter = newLevelFilter(Level_DEBUG)
+	// InfoFilter is a Filter that only includes Entries with a Level of at least Level_INFO.
+	InfoFilter = newLevelFilter(Level_INFO)
+	// WarnFilter is a Filter that only includes Entries with a Level of at least Level_WARN.
+	WarnFilter = newLevelFilter(Level_WARN)
+	// ErrorFilter is a Filter that only includes Entries with a Level of at least Level_ERROR.
+	ErrorFilter = newLevelFilter(Level_ERROR)
+	// FatalFilter is a Filter that only includes Entries with a Level of at least Level_FATAL.
+	FatalFilter = newLevelFilter(Level_FATAL)
+	// PanicFilter is a Filter that only includes Entries with a Level of at least Level_PANIC.
+	PanicFilter = newLevelFilter(Level_PANIC)
 
 	// ShortJSONMarshaller is a Marshaller that marshales Entries in JSON, but with shorthand
 	// notation for Context and Entry types. It should not be used for logging intended for RPC use.

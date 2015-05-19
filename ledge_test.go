@@ -96,19 +96,19 @@ func TestFakeLogger(t *testing.T) {
 			&Entry{
 				ID:    "0",
 				Time:  time.Unix(0, 0),
-				Level: LevelInfo,
+				Level: Level_INFO,
 				Event: TestEventFoo{"one", 2},
 			},
 			&Entry{
 				ID:    "1",
 				Time:  time.Unix(100, 0),
-				Level: LevelInfo,
+				Level: Level_INFO,
 				Event: &TestEventFooPtr{"one", 2},
 			},
 			&Entry{
 				ID:    "2",
 				Time:  time.Unix(200, 0),
-				Level: LevelInfo,
+				Level: Level_INFO,
 				Contexts: []Context{
 					TestRequestID("bar"),
 				},
@@ -117,7 +117,7 @@ func TestFakeLogger(t *testing.T) {
 			&Entry{
 				ID:    "3",
 				Time:  time.Unix(300, 0),
-				Level: LevelInfo,
+				Level: Level_INFO,
 				Contexts: []Context{
 					TestInteger(10),
 				},
@@ -126,7 +126,7 @@ func TestFakeLogger(t *testing.T) {
 			&Entry{
 				ID:    "4",
 				Time:  time.Unix(400, 0),
-				Level: LevelInfo,
+				Level: Level_INFO,
 				Contexts: []Context{
 					TestContextBar{"one", 2},
 				},
@@ -135,7 +135,7 @@ func TestFakeLogger(t *testing.T) {
 			&Entry{
 				ID:    "5",
 				Time:  time.Unix(500, 0),
-				Level: LevelInfo,
+				Level: Level_INFO,
 				Contexts: []Context{
 					TestContextBar{"one", 2},
 				},
@@ -144,13 +144,13 @@ func TestFakeLogger(t *testing.T) {
 			&Entry{
 				ID:    "6",
 				Time:  time.Unix(600, 0),
-				Level: LevelInfo,
+				Level: Level_INFO,
 				Event: InfoEvent("{key:value}"),
 			},
 			&Entry{
 				ID:    "7",
 				Time:  time.Unix(700, 0),
-				Level: LevelInfo,
+				Level: Level_INFO,
 				Event: InfoEvent(""),
 			},
 		},
@@ -217,19 +217,19 @@ func TestRoundTrip(t *testing.T) {
 			&Entry{
 				ID:    "0",
 				Time:  time.Unix(0, 0),
-				Level: LevelInfo,
+				Level: Level_INFO,
 				Event: TestEventFoo{"one", 2},
 			},
 			&Entry{
 				ID:    "1",
 				Time:  time.Unix(100, 0),
-				Level: LevelInfo,
+				Level: Level_INFO,
 				Event: &TestEventFooPtr{"one", 2},
 			},
 			&Entry{
 				ID:    "2",
 				Time:  time.Unix(200, 0),
-				Level: LevelInfo,
+				Level: Level_INFO,
 				Contexts: []Context{
 					TestRequestID("bar"),
 				},
@@ -238,7 +238,7 @@ func TestRoundTrip(t *testing.T) {
 			&Entry{
 				ID:    "3",
 				Time:  time.Unix(300, 0),
-				Level: LevelInfo,
+				Level: Level_INFO,
 				Contexts: []Context{
 					TestInteger(10),
 				},
@@ -247,7 +247,7 @@ func TestRoundTrip(t *testing.T) {
 			&Entry{
 				ID:    "4",
 				Time:  time.Unix(400, 0),
-				Level: LevelInfo,
+				Level: Level_INFO,
 				Contexts: []Context{
 					TestContextBar{"one", 2},
 				},
@@ -256,7 +256,7 @@ func TestRoundTrip(t *testing.T) {
 			&Entry{
 				ID:    "5",
 				Time:  time.Unix(500, 0),
-				Level: LevelInfo,
+				Level: Level_INFO,
 				Contexts: []Context{
 					TestContextBar{"one", 2},
 				},
@@ -265,19 +265,19 @@ func TestRoundTrip(t *testing.T) {
 			&Entry{
 				ID:    "6",
 				Time:  time.Unix(600, 0),
-				Level: LevelInfo,
+				Level: Level_INFO,
 				Event: InfoEvent("{key:value}"),
 			},
 			&Entry{
 				ID:    "7",
 				Time:  time.Unix(700, 0),
-				Level: LevelInfo,
+				Level: Level_INFO,
 				Event: InfoEvent(""),
 			},
 			&Entry{
 				ID:    "8",
 				Time:  time.Unix(800, 0),
-				Level: LevelInfo,
+				Level: Level_INFO,
 				Event: InfoEvent(byteString),
 			},
 		},

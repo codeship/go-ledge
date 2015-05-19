@@ -16,7 +16,7 @@ func newEntryWriter(
 }
 
 func (e *entryWriter) Write(p []byte) (int, error) {
-	// TODO(pedge): what if level is LevelFatal or LevelPanic?
+	// TODO(pedge): what if level is Level_FATAL or Level_PANIC?
 	if p == nil || len(p) == 0 {
 		return 0, nil
 	}

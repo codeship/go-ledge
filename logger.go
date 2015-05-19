@@ -50,43 +50,43 @@ func (l *logger) Unstructured() UnstructuredLogger {
 }
 
 func (l *logger) Debug(event Event) {
-	l.print(LevelDebug, event)
+	l.print(Level_DEBUG, event)
 }
 
 func (l *logger) Error(event Event) {
-	l.print(LevelError, event)
+	l.print(Level_ERROR, event)
 }
 
 func (l *logger) Fatal(event Event) {
-	l.print(LevelFatal, event)
+	l.print(Level_FATAL, event)
 }
 
 func (l *logger) Info(event Event) {
-	l.print(LevelInfo, event)
+	l.print(Level_INFO, event)
 }
 
 func (l *logger) Panic(event Event) {
-	l.print(LevelPanic, event)
+	l.print(Level_PANIC, event)
 }
 
 func (l *logger) Warn(event Event) {
-	l.print(LevelWarn, event)
+	l.print(Level_WARN, event)
 }
 
 func (l *logger) DebugWriter(event Event) io.Writer {
-	return l.printWriter(LevelDebug, event)
+	return l.printWriter(Level_DEBUG, event)
 }
 
 func (l *logger) ErrorWriter(event Event) io.Writer {
-	return l.printWriter(LevelError, event)
+	return l.printWriter(Level_ERROR, event)
 }
 
 func (l *logger) InfoWriter(event Event) io.Writer {
-	return l.printWriter(LevelInfo, event)
+	return l.printWriter(Level_INFO, event)
 }
 
 func (l *logger) WarnWriter(event Event) io.Writer {
-	return l.printWriter(LevelWarn, event)
+	return l.printWriter(Level_WARN, event)
 }
 
 func (l *logger) print(level Level, event Event) {
@@ -145,7 +145,7 @@ func (l *logger) write(entry *Entry) (int, error) {
 		return 0, err
 	}
 	// TODO(pedge): does this work?
-	if entry.Level == LevelPanic {
+	if entry.Level == Level_PANIC {
 		panic(string(p))
 	}
 	if l.include(entry) {
@@ -159,7 +159,7 @@ func (l *logger) write(entry *Entry) (int, error) {
 		return l.writer.Write(q)
 	}
 	// TODO(pedge): does this work?
-	if entry.Level == LevelFatal {
+	if entry.Level == Level_FATAL {
 		os.Exit(1)
 	}
 	return 0, nil
