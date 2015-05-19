@@ -42,7 +42,9 @@ install: deps generate
 
 lint: testdeps generate
 	go get -v github.com/golang/lint/golint
-	golint ./...
+	for file in $$(git ls-files '*.go' | grep -v '\.pb\.go'); do \
+		golint $$file; \
+	done
 
 vet: testdeps generate
 	go get -v golang.org/x/tools/cmd/vet
