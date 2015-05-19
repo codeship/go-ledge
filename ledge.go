@@ -8,23 +8,23 @@ import (
 
 var (
 	// DebugFilter is a Filter that only includes Entries with a Level of at least LevelDebug.
-	DebugFilter Filter = newLevelFilter(LevelDebug)
+	DebugFilter = newLevelFilter(LevelDebug)
 	// InfoFilter is a Filter that only includes Entries with a Level of at least LevelInfo.
-	InfoFilter Filter = newLevelFilter(LevelInfo)
+	InfoFilter = newLevelFilter(LevelInfo)
 	// WarnFilter is a Filter that only includes Entries with a Level of at least LevelWarn.
-	WarnFilter Filter = newLevelFilter(LevelWarn)
+	WarnFilter = newLevelFilter(LevelWarn)
 	// ErrorFilter is a Filter that only includes Entries with a Level of at least LevelError.
-	ErrorFilter Filter = newLevelFilter(LevelError)
+	ErrorFilter = newLevelFilter(LevelError)
 	// FatalFilter is a Filter that only includes Entries with a Level of at least LevelFatal.
-	FatalFilter Filter = newLevelFilter(LevelFatal)
+	FatalFilter = newLevelFilter(LevelFatal)
 	// PanicFilter is a Filter that only includes Entries with a Level of at least LevelPanic.
-	PanicFilter Filter = newLevelFilter(LevelPanic)
+	PanicFilter = newLevelFilter(LevelPanic)
 
 	// ShortJSONMarshaller is a Marshaller that marshales Entries in JSON, but with shorthand
 	// notation for Context and Entry types. It should not be used for logging intended for RPC use.
-	ShortJSONMarshaller Marshaller = newShortJSONMarshaller(defaultJSONKeys)
+	ShortJSONMarshaller = newShortJSONMarshaller(defaultJSONKeys)
 	// JSONMarshaller is a Marshaller for JSON. It is intended for RPC use.
-	JSONMarshaller Marshaller = newJSONMarshaller(defaultJSONKeys)
+	JSONMarshaller = newJSONMarshaller(defaultJSONKeys)
 	// RPCEncoder is an Encoder that wraps data in a simple RPC format.
 	RPCEncoder Encoder = rpcEncoderInstance
 	// RPCDecoder is a Decoder that decodes data encoded with RPCEncoder.
