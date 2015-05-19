@@ -24,9 +24,7 @@ var (
 		eventType:    "event_type",
 		writerOutput: "writer_output",
 	}
-	shortJSONReflectTypeKeyProviderInstance = &shortJSONReflectTypeKeyProvider{}
-	longJSONReflectTypeKeyProviderInstance  = &longJSONReflectTypeKeyProvider{}
-	protoMarshallerInstance                 = &protoMarshaller{}
+	protoMarshallerInstance = &protoMarshaller{}
 )
 
 type textMarshaller struct {
@@ -109,7 +107,7 @@ func (t *textMarshaller) objectString(object interface{}) (string, error) {
 		return "nil", nil
 	}
 	reflectType := reflect.TypeOf(object)
-	typeString, err := shortJSONReflectTypeKeyProviderInstance.Key(reflectType)
+	typeString, err := shortReflectKey(reflectType)
 	if err != nil {
 		return "", err
 	}
@@ -126,29 +124,6 @@ func (t *textMarshaller) objectString(object interface{}) (string, error) {
 	return fmt.Sprintf("%s=%s", typeString, objectString), nil
 }
 
-type jsonReflectTypeKeyProvider interface {
-	Key(reflectType reflect.Type) (string, error)
-}
-
-type shortJSONReflectTypeKeyProvider struct{}
-
-func (s *shortJSONReflectTypeKeyProvider) Key(reflectType reflect.Type) (string, error) {
-	for reflectType.Kind() == reflect.Ptr {
-		reflectType = reflectType.Elem()
-	}
-	name := reflectType.Name()
-	if name == "" {
-		return "", fmt.Errorf("ledge: no name for type %v", reflectType)
-	}
-	return name, nil
-}
-
-type longJSONReflectTypeKeyProvider struct{}
-
-func (l *longJSONReflectTypeKeyProvider) Key(reflectType reflect.Type) (string, error) {
-	return getReflectTypeName(reflectType)
-}
-
 type jsonKeys struct {
 	id           string
 	time         string
@@ -157,62 +132,49 @@ type jsonKeys struct {
 	writerOutput string
 }
 
-type baseJSONMarshaller struct {
-	jsonReflectTypeKeyProvider jsonReflectTypeKeyProvider
-	jsonKeys                   *jsonKeys
-}
-
-func newShortJSONMarshaller(
-	jsonKeys *jsonKeys,
-) *baseJSONMarshaller {
-	return newBaseJSONMarshaller(
-		shortJSONReflectTypeKeyProviderInstance,
-		jsonKeys,
-	)
+type jsonMarshaller struct {
+	jsonKeys *jsonKeys
 }
 
 func newJSONMarshaller(
 	jsonKeys *jsonKeys,
-) *baseJSONMarshaller {
-	return newBaseJSONMarshaller(
-		longJSONReflectTypeKeyProviderInstance,
-		jsonKeys,
-	)
-}
-
-func newBaseJSONMarshaller(
-	jsonReflectTypeKeyProvider jsonReflectTypeKeyProvider,
-	jsonKeys *jsonKeys,
-) *baseJSONMarshaller {
-	if jsonKeys == nil {
-		jsonKeys = defaultJSONKeys
-	}
-	return &baseJSONMarshaller{
-		jsonReflectTypeKeyProvider,
+) *jsonMarshaller {
+	return &jsonMarshaller{
 		jsonKeys,
 	}
 }
 
-func (b *baseJSONMarshaller) Marshal(entry *Entry) ([]byte, error) {
+func (j *jsonMarshaller) Marshal(entry *Entry) ([]byte, error) {
 	m := make(map[string]interface{})
-	m[b.jsonKeys.id] = entry.ID
-	m[b.jsonKeys.time] = entry.Time.Format(timeFormat)
-	m[b.jsonKeys.level] = strings.ToLower(entry.Level.String())
+	m[j.jsonKeys.id] = entry.ID
+	m[j.jsonKeys.time] = entry.Time.Format(timeFormat)
+	m[j.jsonKeys.level] = strings.ToLower(entry.Level.String())
 	for _, context := range entry.Contexts {
-		contextKey, err := b.jsonReflectTypeKeyProvider.Key(reflect.TypeOf(context))
+		contextKey, err := shortReflectKey(reflect.TypeOf(context))
 		if err != nil {
 			return nil, err
 		}
 		m[contextKey] = context
 	}
-	eventKey, err := b.jsonReflectTypeKeyProvider.Key(reflect.TypeOf(entry.Event))
+	eventKey, err := shortReflectKey(reflect.TypeOf(entry.Event))
 	if err != nil {
 		return nil, err
 	}
-	m[b.jsonKeys.eventType] = eventKey
+	m[j.jsonKeys.eventType] = eventKey
 	m[eventKey] = entry.Event
-	m[b.jsonKeys.writerOutput] = string(entry.WriterOutput)
+	m[j.jsonKeys.writerOutput] = string(entry.WriterOutput)
 	return json.Marshal(m)
+}
+
+func shortReflectKey(reflectType reflect.Type) (string, error) {
+	for reflectType.Kind() == reflect.Ptr {
+		reflectType = reflectType.Elem()
+	}
+	name := reflectType.Name()
+	if name == "" {
+		return "", fmt.Errorf("ledge: no name for type %v", reflectType)
+	}
+	return name, nil
 }
 
 type protoMarshaller struct{}

@@ -47,7 +47,6 @@ func TestLoggerPrintToStdout(t *testing.T) {
 		NewTextMarshaller(
 			TextMarshallerOptions{},
 		),
-		ShortJSONMarshaller,
 		JSONMarshaller,
 	} {
 		logger, err := NewLogger(

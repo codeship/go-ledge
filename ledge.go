@@ -20,10 +20,8 @@ var (
 	// PanicFilter is a Filter that only includes Entries with a Level of at least Level_PANIC.
 	PanicFilter = newLevelFilter(Level_PANIC)
 
-	// ShortJSONMarshaller is a Marshaller that marshales Entries in JSON, but with shorthand
+	// JSONMarshaller is a Marshaller that marshales Entries in JSON, with shorthand
 	// notation for Context and Entry types. It should not be used for logging intended for RPC use.
-	ShortJSONMarshaller = newShortJSONMarshaller(defaultJSONKeys)
-	// JSONMarshaller is a Marshaller for JSON. It is intended for RPC use.
 	JSONMarshaller = newJSONMarshaller(defaultJSONKeys)
 	// ProtoMarshaller is a Marshaller for Protocol Buffers. It is intended for RPC use.
 	ProtoMarshaller = protoMarshallerInstance
@@ -396,15 +394,6 @@ func NewLogger(writer io.Writer, marshaller Marshaller, specification *Specifica
 type Unmarshaller interface {
 	// Unmarshal unmarshals a byte slice into an Entry.
 	Unmarshal(p []byte) (*Entry, error)
-}
-
-// NewJSONUnmarshaller returns a new Unmarshaller that unmarshals Entry objects
-// marshalled with JSONMarshaller.
-func NewJSONUnmarshaller(specification *Specification) (Unmarshaller, error) {
-	return newJSONUnmarshaller(
-		specification,
-		defaultJSONKeys,
-	)
 }
 
 // NewProtoUnmarshaller returns a new Unmarshaller that unmarshals Entry Objects

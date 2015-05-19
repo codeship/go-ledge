@@ -1,9 +1,6 @@
 package ledge
 
-import (
-	"encoding/json"
-	"reflect"
-)
+import "reflect"
 
 type reflectTypeHandler struct {
 	reflectTypeProvider *reflectTypeProvider
@@ -21,7 +18,7 @@ func newReflectTypeHandler(
 	}, nil
 }
 
-func (r *reflectTypeHandler) getContext(objectType string, object interface{}) (interface{}, error) {
+func (r *reflectTypeHandler) getContext(objectType string, object []byte) (interface{}, error) {
 	reflectType, err := r.reflectTypeProvider.getContextReflectType(objectType)
 	if err != nil {
 		return nil, err
@@ -29,7 +26,7 @@ func (r *reflectTypeHandler) getContext(objectType string, object interface{}) (
 	return r.getObject(reflectType, object)
 }
 
-func (r *reflectTypeHandler) getEvent(objectType string, object interface{}) (interface{}, error) {
+func (r *reflectTypeHandler) getEvent(objectType string, object []byte) (interface{}, error) {
 	reflectType, err := r.reflectTypeProvider.getEventReflectType(objectType)
 	if err != nil {
 		return nil, err
@@ -37,21 +34,9 @@ func (r *reflectTypeHandler) getEvent(objectType string, object interface{}) (in
 	return r.getObject(reflectType, object)
 }
 
-func (r *reflectTypeHandler) getObject(reflectType reflect.Type, object interface{}) (interface{}, error) {
-	if data, ok := object.([]byte); ok {
-		objectPtr := reflect.New(reflectType).Interface()
-		if err := unmarshalBinary(data, objectPtr); err != nil {
-			return nil, err
-		}
-		return reflect.ValueOf(objectPtr).Elem().Interface(), nil
-	}
-	// the below logic is to type the object correctly, do not mess with it
-	data, err := json.Marshal(object)
-	if err != nil {
-		return nil, err
-	}
+func (r *reflectTypeHandler) getObject(reflectType reflect.Type, object []byte) (interface{}, error) {
 	objectPtr := reflect.New(reflectType).Interface()
-	if err := json.Unmarshal(data, objectPtr); err != nil {
+	if err := unmarshalBinary(object, objectPtr); err != nil {
 		return nil, err
 	}
 	return reflect.ValueOf(objectPtr).Elem().Interface(), nil
