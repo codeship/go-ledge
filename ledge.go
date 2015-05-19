@@ -26,9 +26,9 @@ var (
 	// JSONMarshaller is a Marshaller for JSON. It is intended for RPC use.
 	JSONMarshaller = newJSONMarshaller(defaultJSONKeys)
 	// RPCEncoder is an Encoder that wraps data in a simple RPC format.
-	RPCEncoder Encoder = rpcEncoderInstance
+	RPCEncoder = rpcEncoderInstance
 	// RPCDecoder is a Decoder that decodes data encoded with RPCEncoder.
-	RPCDecoder Decoder = rpcDecoderInstance
+	RPCDecoder = rpcDecoderInstance
 
 	// DefaultEventTypes are the Event types included with every Logger, EntryReader,
 	// and BlockingEntryReader by default. These are used for the UnstructuredLogger.
