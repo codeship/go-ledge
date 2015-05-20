@@ -76,13 +76,13 @@ func (p *protoUnmarshaller) getEvent(objectType string, object []byte) (interfac
 }
 
 func (p *protoUnmarshaller) getObject(reflectType reflect.Type, object []byte) (interface{}, error) {
-	//if reflectType.Implements(reflect.TypeOf((*proto.Message)(nil)).Elem()) {
-	//protoMessage := reflect.New(reflectType).Elem().Interface().(proto.Message)
-	//if err := proto.Unmarshal(object, protoMessage); err != nil {
-	//return nil, err
-	//}
-	//return protoMessage, nil
-	//}
+	if reflectType.Implements(reflect.TypeOf((*proto.Message)(nil)).Elem()) {
+		protoMessage := reflect.New(reflectType.Elem()).Interface().(proto.Message)
+		if err := proto.Unmarshal(object, protoMessage); err != nil {
+			return nil, err
+		}
+		return protoMessage, nil
+	}
 	objectPtr := reflect.New(reflectType).Interface()
 	if err := gob.NewDecoder(bytes.NewBuffer(object)).Decode(objectPtr); err != nil {
 		return nil, err
