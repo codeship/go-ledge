@@ -33,12 +33,7 @@ var (
 	// DefaultEventTypes are the Event types included with every Logger, EntryReader,
 	// and BlockingEntryReader by default. These are used for the UnstructuredLogger.
 	DefaultEventTypes = []Event{
-		DebugEvent(""),
-		ErrorEvent(""),
-		FatalEvent(""),
-		InfoEvent(""),
-		PanicEvent(""),
-		WarnEvent(""),
+		&UnstructuredEvent{},
 	}
 
 	globalLogger Logger
@@ -128,24 +123,6 @@ type Context interface{}
 
 // An Event is outputted by a Logger.
 type Event interface{}
-
-// DebugEvent is the Event for Debug statements with an UnstructuredLogger.
-type DebugEvent string
-
-// ErrorEvent is the Event for Error statements with an UnstructuredLogger.
-type ErrorEvent string
-
-// FatalEvent is the Event for Fatal statements with an UnstructuredLogger.
-type FatalEvent string
-
-// InfoEvent is the Event for Info statements with an UnstructuredLogger.
-type InfoEvent string
-
-// PanicEvent is the Event for Panic statements with an UnstructuredLogger.
-type PanicEvent string
-
-// WarnEvent is the Event for Warn statements with an UnstructuredLogger.
-type WarnEvent string
 
 // Fields are attached to an UnstructuredLogger and included as part of every statement outputted.
 type Fields map[string]interface{}

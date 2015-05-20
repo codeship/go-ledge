@@ -9,6 +9,7 @@ It is generated from these files:
 	ledge.proto
 
 It has these top-level messages:
+	UnstructuredEvent
 	ProtoEntry
 */
 package ledge
@@ -52,6 +53,14 @@ var Level_value = map[string]int32{
 func (x Level) String() string {
 	return proto.EnumName(Level_name, int32(x))
 }
+
+type UnstructuredEvent struct {
+	Msg string `protobuf:"bytes,1,opt,name=msg" json:"msg,omitempty"`
+}
+
+func (m *UnstructuredEvent) Reset()         { *m = UnstructuredEvent{} }
+func (m *UnstructuredEvent) String() string { return proto.CompactTextString(m) }
+func (*UnstructuredEvent) ProtoMessage()    {}
 
 type ProtoEntry struct {
 	Id                       string            `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`

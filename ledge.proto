@@ -2,6 +2,10 @@ syntax = "proto3";
 
 package ledge;
 
+message UnstructuredEvent {
+	string msg = 1;
+}
+
 enum Level {
   NONE = 0;
   DEBUG = 1;

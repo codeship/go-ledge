@@ -135,7 +135,7 @@ func TestFakeLogger(t *testing.T) {
 				Contexts: []Context{
 					TestContextBar{"one", 2},
 				},
-				Event: InfoEvent("hello"),
+				Event: &UnstructuredEvent{"hello"},
 			},
 			&Entry{
 				ID:    "5",
@@ -144,19 +144,19 @@ func TestFakeLogger(t *testing.T) {
 				Contexts: []Context{
 					TestContextBar{"one", 2},
 				},
-				Event: InfoEvent("{key:value} hello"),
+				Event: &UnstructuredEvent{"{key:value} hello"},
 			},
 			&Entry{
 				ID:    "6",
 				Time:  time.Unix(600, 0),
 				Level: Level_INFO,
-				Event: InfoEvent("{key:value}"),
+				Event: &UnstructuredEvent{"{key:value}"},
 			},
 			&Entry{
 				ID:    "7",
 				Time:  time.Unix(700, 0),
 				Level: Level_INFO,
-				Event: InfoEvent(""),
+				Event: &UnstructuredEvent{""},
 			},
 		},
 		true,
@@ -259,7 +259,7 @@ func TestRoundTrip(t *testing.T) {
 				Contexts: []Context{
 					TestContextBar{"one", 2},
 				},
-				Event: InfoEvent("hello"),
+				Event: &UnstructuredEvent{"hello"},
 			},
 			&Entry{
 				ID:    "5",
@@ -268,25 +268,25 @@ func TestRoundTrip(t *testing.T) {
 				Contexts: []Context{
 					TestContextBar{"one", 2},
 				},
-				Event: InfoEvent("{key:value} hello"),
+				Event: &UnstructuredEvent{"{key:value} hello"},
 			},
 			&Entry{
 				ID:    "6",
 				Time:  time.Unix(600, 0),
 				Level: Level_INFO,
-				Event: InfoEvent("{key:value}"),
+				Event: &UnstructuredEvent{"{key:value}"},
 			},
 			&Entry{
 				ID:    "7",
 				Time:  time.Unix(700, 0),
 				Level: Level_INFO,
-				Event: InfoEvent(""),
+				Event: &UnstructuredEvent{""},
 			},
 			&Entry{
 				ID:    "8",
 				Time:  time.Unix(800, 0),
 				Level: Level_INFO,
-				Event: InfoEvent(byteString),
+				Event: &UnstructuredEvent{byteString},
 			},
 		},
 		true,
