@@ -10,13 +10,14 @@ import (
 )
 
 var (
-	//testWriter        = io.Writer(os.Stdout)
+	//testWriter = io.Writer(os.Stdout)
 	testWriter        = ioutil.Discard
 	testSpecification = &Specification{
 		ContextTypes: []Context{
 			TestRequestID(""),
 			TestInteger(0),
 			TestContextBar{},
+			Level_NONE,
 		},
 		EventTypes: []Event{
 			TestEventFoo{},
@@ -72,6 +73,7 @@ func TestLoggerPrintToStdout(t *testing.T) {
 		logger.WithContext(TestContextBar{"one", 2}).Unstructured().WithField("key", "value").Info("hello")
 		logger.Unstructured().WithField("key", "value").Info("")
 		logger.Unstructured().Info("")
+		logger.WithContext(Level_PANIC).Unstructured().Info("panic context")
 	}
 }
 
@@ -95,6 +97,8 @@ func TestFakeLogger(t *testing.T) {
 	fakeLogger.Unstructured().WithField("key", "value").Info("")
 	fakeLogger.AddTimeSec(100)
 	fakeLogger.Unstructured().Info("")
+	fakeLogger.AddTimeSec(100)
+	fakeLogger.WithContext(Level_PANIC).Unstructured().Info("panic context")
 
 	if err := fakeLogger.CheckEntriesEqual(
 		[]*Entry{
@@ -157,6 +161,15 @@ func TestFakeLogger(t *testing.T) {
 				Time:  time.Unix(700, 0),
 				Level: Level_INFO,
 				Event: &UnstructuredEvent{""},
+			},
+			&Entry{
+				ID:    "8",
+				Time:  time.Unix(800, 0),
+				Level: Level_INFO,
+				Contexts: []Context{
+					Level_PANIC,
+				},
+				Event: &UnstructuredEvent{"panic context"},
 			},
 		},
 		true,
