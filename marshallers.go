@@ -3,6 +3,7 @@ package ledge
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -191,7 +192,7 @@ func (p *protoMarshaller) Marshal(entry *Entry) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	eventBytes, err := marshalBinary(entry.Event)
+	eventBytes, err := p.marshalBinary(entry.Event)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +203,7 @@ func (p *protoMarshaller) Marshal(entry *Entry) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		contextBytes, err := marshalBinary(context)
+		contextBytes, err := p.marshalBinary(context)
 		if err != nil {
 			return nil, err
 		}
@@ -222,4 +223,16 @@ func (p *protoMarshaller) Marshal(entry *Entry) ([]byte, error) {
 	}
 	bufferBytes := buffer.Bytes()
 	return bufferBytes, nil
+}
+
+func (p *protoMarshaller) marshalBinary(object interface{}) ([]byte, error) {
+	//if protoMessage, ok := object.(proto.Message); ok {
+	//fmt.Printf("marshal %T\n", object)
+	//return proto.Marshal(protoMessage)
+	//}
+	buffer := bytes.NewBuffer(nil)
+	if err := gob.NewEncoder(buffer).Encode(object); err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
 }

@@ -3,24 +3,26 @@ package ledge
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/gob"
+	"reflect"
 	"time"
 
 	"github.com/golang/protobuf/proto"
 )
 
 type protoUnmarshaller struct {
-	reflectTypeHandler *reflectTypeHandler
+	reflectTypeProvider *reflectTypeProvider
 }
 
 func newProtoUnmarshaller(
 	specification *Specification,
 ) (*protoUnmarshaller, error) {
-	reflectTypeHandler, err := newReflectTypeHandler(specification)
+	reflectTypeProvider, err := newReflectTypeProvider(specification)
 	if err != nil {
 		return nil, err
 	}
 	return &protoUnmarshaller{
-		reflectTypeHandler,
+		reflectTypeProvider,
 	}, nil
 }
 
@@ -42,17 +44,48 @@ func (p *protoUnmarshaller) Unmarshal(buffer []byte) (*Entry, error) {
 		Contexts:     make([]Context, 0),
 		WriterOutput: protoEntry.WriterOutput,
 	}
-	event, err := p.reflectTypeHandler.getEvent(protoEntry.EventTypeName, protoEntry.Event)
+	event, err := p.getEvent(protoEntry.EventTypeName, protoEntry.Event)
 	if err != nil {
 		return nil, err
 	}
 	entry.Event = event
 	for contextTypeName, contextBytes := range protoEntry.ContextTypeNameToContext {
-		context, err := p.reflectTypeHandler.getContext(contextTypeName, contextBytes)
+		context, err := p.getContext(contextTypeName, contextBytes)
 		if err != nil {
 			return nil, err
 		}
 		entry.Contexts = append(entry.Contexts, context)
 	}
 	return entry, nil
+}
+
+func (p *protoUnmarshaller) getContext(objectType string, object []byte) (interface{}, error) {
+	reflectType, err := p.reflectTypeProvider.getContextReflectType(objectType)
+	if err != nil {
+		return nil, err
+	}
+	return p.getObject(reflectType, object)
+}
+
+func (p *protoUnmarshaller) getEvent(objectType string, object []byte) (interface{}, error) {
+	reflectType, err := p.reflectTypeProvider.getEventReflectType(objectType)
+	if err != nil {
+		return nil, err
+	}
+	return p.getObject(reflectType, object)
+}
+
+func (p *protoUnmarshaller) getObject(reflectType reflect.Type, object []byte) (interface{}, error) {
+	//if reflectType.Implements(reflect.TypeOf((*proto.Message)(nil)).Elem()) {
+	//protoMessage := reflect.New(reflectType).Elem().Interface().(proto.Message)
+	//if err := proto.Unmarshal(object, protoMessage); err != nil {
+	//return nil, err
+	//}
+	//return protoMessage, nil
+	//}
+	objectPtr := reflect.New(reflectType).Interface()
+	if err := gob.NewDecoder(bytes.NewBuffer(object)).Decode(objectPtr); err != nil {
+		return nil, err
+	}
+	return reflect.ValueOf(objectPtr).Elem().Interface(), nil
 }

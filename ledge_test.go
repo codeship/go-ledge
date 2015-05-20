@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"testing"
 	"time"
+
+	"github.com/golang/protobuf/proto"
 )
 
 var (
@@ -38,9 +40,13 @@ type TestEventFoo struct {
 }
 
 type TestEventFooPtr struct {
-	One string
-	Two int
+	One string `protobuf:"bytes,1,opt,name=one" json:"one,omitempty"`
+	Two int32  `protobuf:"varint,2,opt,name=two" json:"two,omitempty"`
 }
+
+func (m *TestEventFooPtr) Reset()         { *m = TestEventFooPtr{} }
+func (m *TestEventFooPtr) String() string { return proto.CompactTextString(m) }
+func (*TestEventFooPtr) ProtoMessage()    {}
 
 func TestLoggerPrintToStdout(t *testing.T) {
 	for _, marshaller := range []Marshaller{
