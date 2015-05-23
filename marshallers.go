@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"unicode"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
@@ -59,7 +60,7 @@ func (l *logrusTextMarshaller) Marshal(entry *Entry) ([]byte, error) {
 		Data:    make(logrus.Fields),
 		Time:    entry.Time,
 		Level:   logrusLevel,
-		Message: strings.TrimSpace(string(entry.WriterOutput)),
+		Message: trimSpace(string(entry.WriterOutput)),
 	}
 	logrusTextFormatter := &logrus.TextFormatter{}
 	if !l.options.NoID {
@@ -89,7 +90,7 @@ func (l *logrusTextMarshaller) Marshal(entry *Entry) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return []byte(strings.TrimSpace(string(data))), nil
+	return []byte(trimSpace(string(data))), nil
 }
 
 type textMarshallerV2 struct {
@@ -112,7 +113,7 @@ func (t *textMarshallerV2) Marshal(entry *Entry) ([]byte, error) {
 	buffer := bytes.NewBuffer(nil)
 	writerOutputLen := 0
 	if entry.WriterOutput != nil && len(entry.WriterOutput) > 0 {
-		writerOutput := strings.TrimSpace(string(entry.WriterOutput))
+		writerOutput := trimSpace(string(entry.WriterOutput))
 		if _, err := buffer.Write([]byte(writerOutput)); err != nil {
 			return nil, err
 		}
@@ -168,6 +169,12 @@ func (t *textMarshallerV2) Marshal(entry *Entry) ([]byte, error) {
 	if _, err := buffer.WriteString(eventString); err != nil {
 		return nil, err
 	}
+	return buffer.Bytes(), nil
+}
+
+func textMarshallerFields(entry *Entry, options TextMarshallerOptions) ([]byte, error) {
+	buffer := bytes.NewBuffer(nil)
+
 	return buffer.Bytes(), nil
 }
 
@@ -245,7 +252,7 @@ func (t *textMarshaller) Marshal(entry *Entry) ([]byte, error) {
 			return nil, err
 		}
 	}
-	return []byte(strings.TrimSpace(buffer.String())), nil
+	return []byte(trimSpace(buffer.String())), nil
 }
 
 func textMarshallerObjectString(object interface{}) (string, error) {
@@ -262,7 +269,7 @@ func textMarshallerObjectKeyString(object interface{}) (string, error) {
 
 func textMarshallerObjectValueString(object interface{}) string {
 	if stringer, ok := object.(fmt.Stringer); ok {
-		return strings.TrimSpace(stringer.String())
+		return trimSpace(stringer.String())
 	}
 	objectString := fmt.Sprintf("%+v", object)
 	if len(objectString) > 0 && objectString[0:1] == "&" {
@@ -275,6 +282,10 @@ func textMarshallerObjectValueString(object interface{}) string {
 		objectString = fmt.Sprintf("%s}", strings.TrimSuffix(objectString, " }"))
 	}
 	return objectString
+}
+
+func trimSpace(s string) string {
+	return strings.TrimRightFunc(s, unicode.IsSpace)
 }
 
 type jsonKeys struct {
