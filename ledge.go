@@ -294,6 +294,14 @@ type TextMarshallerOptions struct {
 	NoContexts bool
 }
 
+// NewLogrusTextMarshaller returns a Marshaller that uses Logrus' TextFormatter.
+// This should never be used if an EntryReader or BlockingEntryReader is to be used with the Entry objects.
+func NewLogrusTextMarshaller(options TextMarshallerOptions) Marshaller {
+	return newLogrusTextMarshaller(
+		options,
+	)
+}
+
 // NewTextMarshallerV2 returns a Marshaller that marshals output in a human-readable manner.
 // This should never be used if an EntryReader or BlockingEntryReader is to be used with the Entry objects.
 func NewTextMarshallerV2(options TextMarshallerOptions) Marshaller {

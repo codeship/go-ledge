@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 )
 
@@ -26,8 +27,70 @@ var (
 		eventType:    "event_type",
 		writerOutput: "writer_output",
 	}
+	levelToLogrusLevel = map[Level]logrus.Level{
+		Level_DEBUG: logrus.DebugLevel,
+		Level_INFO:  logrus.InfoLevel,
+		Level_WARN:  logrus.WarnLevel,
+		Level_ERROR: logrus.ErrorLevel,
+		Level_FATAL: logrus.FatalLevel,
+		Level_PANIC: logrus.PanicLevel,
+	}
 	protoMarshallerInstance = &protoMarshaller{}
 )
+
+type logrusTextMarshaller struct {
+	options TextMarshallerOptions
+}
+
+func newLogrusTextMarshaller(
+	options TextMarshallerOptions,
+) *logrusTextMarshaller {
+	return &logrusTextMarshaller{
+		options,
+	}
+}
+
+func (l *logrusTextMarshaller) Marshal(entry *Entry) ([]byte, error) {
+	logrusLevel, ok := levelToLogrusLevel[entry.Level]
+	if !ok {
+		return nil, fmt.Errorf("ledge: no logrus Level for %v", entry.Level)
+	}
+	logrusEntry := &logrus.Entry{
+		Data:    make(logrus.Fields),
+		Time:    entry.Time,
+		Level:   logrusLevel,
+		Message: strings.TrimSpace(string(entry.WriterOutput)),
+	}
+	logrusTextFormatter := &logrus.TextFormatter{}
+	if !l.options.NoID {
+		logrusEntry.Data["id"] = entry.ID
+	}
+	if !l.options.NoTime {
+		logrusTextFormatter.DisableTimestamp = true
+	}
+	// TODO(pedge): cannot do NoLevel for logrus
+	//if !l.options.NoLevel {
+	//}
+	if !l.options.NoContexts {
+		for _, context := range entry.Contexts {
+			contextKeyString, err := textMarshallerObjectKeyString(context)
+			if err != nil {
+				return nil, err
+			}
+			logrusEntry.Data[contextKeyString] = textMarshallerObjectValueString(context)
+		}
+	}
+	eventKeyString, err := textMarshallerObjectKeyString(entry.Event)
+	if err != nil {
+		return nil, err
+	}
+	logrusEntry.Data[eventKeyString] = textMarshallerObjectValueString(entry.Event)
+	data, err := logrusTextFormatter.Format(logrusEntry)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(strings.TrimSpace(string(data))), nil
+}
 
 type textMarshallerV2 struct {
 	options            TextMarshallerOptions
