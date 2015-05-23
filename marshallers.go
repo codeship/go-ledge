@@ -60,7 +60,7 @@ func (l *logrusTextMarshaller) Marshal(entry *Entry) ([]byte, error) {
 		Data:    make(logrus.Fields),
 		Time:    entry.Time,
 		Level:   logrusLevel,
-		Message: trimSpace(string(entry.WriterOutput)),
+		Message: trimRightSpace(string(entry.WriterOutput)),
 	}
 	logrusTextFormatter := &logrus.TextFormatter{}
 	if !l.options.NoID {
@@ -90,7 +90,80 @@ func (l *logrusTextMarshaller) Marshal(entry *Entry) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return []byte(trimSpace(string(data))), nil
+	return []byte(trimRightSpace(string(data))), nil
+}
+
+type textMarshallerV3 struct {
+	columns int
+	options TextMarshallerOptions
+}
+
+func newTextMarshallerV3(
+	columns int,
+	options TextMarshallerOptions,
+) *textMarshallerV3 {
+	return &textMarshallerV3{
+		columns,
+		options,
+	}
+}
+
+func (t *textMarshallerV3) Marshal(entry *Entry) ([]byte, error) {
+	var writerOutput string
+	if entry.WriterOutput != nil && len(entry.WriterOutput) > 0 {
+		writerOutput = trimRightSpace(string(entry.WriterOutput))
+	}
+	fieldsBytes, err := textMarshallerFields(entry, t.options)
+	if err != nil {
+		return nil, err
+	}
+	fields := string(fieldsBytes)
+
+	length := t.columns / 2
+	if t.columns%2 == 0 {
+		length = (t.columns - 1) / 2
+	}
+	writerOutputLines := splitIntoLenLines(writerOutput, length)
+	fieldsLines := splitIntoLenLines(fields, length)
+	blankLine := padString("", length)
+
+	var lines []string
+	for i := 0; i < len(writerOutputLines) || i < len(fieldsLines); i++ {
+		writerOutputLine := blankLine
+		if i < len(writerOutputLines) {
+			writerOutputLine = writerOutputLines[i]
+		}
+		fieldsLine := blankLine
+		if i < len(fieldsLines) {
+			fieldsLine = writerOutputLines[i]
+		}
+		lines = append(lines, fmt.Sprintf("%s|%s", writerOutputLine, fieldsLine))
+	}
+	return []byte(strings.Join(lines, "\n")), nil
+}
+
+func splitIntoLenLines(s string, length int) []string {
+	var lines []string
+	split := strings.Split(s, "\n")
+	for _, elem := range split {
+		if len(elem) <= length {
+			lines = append(lines, padString(elem, length))
+		} else {
+			for len(elem) > length {
+				lines = append(lines, elem[0:length])
+				elem = elem[length:]
+			}
+			lines = append(lines, padString(elem, length))
+		}
+	}
+	return lines
+}
+
+func padString(s string, length int) string {
+	if len(s) >= length {
+		return s
+	}
+	return fmt.Sprintf("%s%s", s, strings.Repeat(" ", length-len(s)))
 }
 
 type textMarshallerV2 struct {
@@ -113,7 +186,7 @@ func (t *textMarshallerV2) Marshal(entry *Entry) ([]byte, error) {
 	buffer := bytes.NewBuffer(nil)
 	writerOutputLen := 0
 	if entry.WriterOutput != nil && len(entry.WriterOutput) > 0 {
-		writerOutput := trimSpace(string(entry.WriterOutput))
+		writerOutput := trimRightSpace(string(entry.WriterOutput))
 		if _, err := buffer.Write([]byte(writerOutput)); err != nil {
 			return nil, err
 		}
@@ -136,45 +209,13 @@ func (t *textMarshallerV2) Marshal(entry *Entry) ([]byte, error) {
 			return nil, err
 		}
 	}
-	if !t.options.NoID {
-		if _, err := buffer.WriteString(fmt.Sprintf("id=%s ", entry.ID)); err != nil {
-			return nil, err
-		}
-	}
-	if !t.options.NoTime {
-		if _, err := buffer.WriteString(fmt.Sprintf("time=%s ", entry.Time.Format("15:04:05.000000000"))); err != nil {
-			return nil, err
-		}
-	}
-	if !t.options.NoLevel {
-		if _, err := buffer.WriteString(fmt.Sprintf("level=%s ", strings.ToLower(entry.Level.String()))); err != nil {
-			return nil, err
-		}
-	}
-	if !t.options.NoContexts {
-		for _, context := range entry.Contexts {
-			contextString, err := textMarshallerObjectString(context)
-			if err != nil {
-				return nil, err
-			}
-			if _, err := buffer.WriteString(fmt.Sprintf("%s ", contextString)); err != nil {
-				return nil, err
-			}
-		}
-	}
-	eventString, err := textMarshallerObjectString(entry.Event)
+	fields, err := textMarshallerFields(entry, t.options)
 	if err != nil {
 		return nil, err
 	}
-	if _, err := buffer.WriteString(eventString); err != nil {
+	if _, err := buffer.Write(fields); err != nil {
 		return nil, err
 	}
-	return buffer.Bytes(), nil
-}
-
-func textMarshallerFields(entry *Entry, options TextMarshallerOptions) ([]byte, error) {
-	buffer := bytes.NewBuffer(nil)
-
 	return buffer.Bytes(), nil
 }
 
@@ -196,49 +237,11 @@ func (t *textMarshaller) Marshal(entry *Entry) ([]byte, error) {
 	if _, err := buffer.WriteString("{"); err != nil {
 		return nil, err
 	}
-	if !t.options.NoID {
-		if _, err := buffer.WriteString(entry.ID); err != nil {
-			return nil, err
-		}
-		if _, err := buffer.WriteString(" "); err != nil {
-			return nil, err
-		}
-	}
-	if !t.options.NoTime {
-		if _, err := buffer.WriteString(entry.Time.Format("15:04:05.000000000")); err != nil {
-			return nil, err
-		}
-		if _, err := buffer.WriteString(" "); err != nil {
-			return nil, err
-		}
-	}
-	if !t.options.NoLevel {
-		if _, err := buffer.WriteString(strings.ToLower(entry.Level.String())); err != nil {
-			return nil, err
-		}
-		if _, err := buffer.WriteString(" "); err != nil {
-			return nil, err
-		}
-	}
-	if !t.options.NoContexts {
-		for _, context := range entry.Contexts {
-			contextString, err := textMarshallerObjectString(context)
-			if err != nil {
-				return nil, err
-			}
-			if _, err := buffer.WriteString(contextString); err != nil {
-				return nil, err
-			}
-			if _, err := buffer.WriteString(" "); err != nil {
-				return nil, err
-			}
-		}
-	}
-	eventString, err := textMarshallerObjectString(entry.Event)
+	fields, err := textMarshallerFields(entry, t.options)
 	if err != nil {
 		return nil, err
 	}
-	if _, err := buffer.WriteString(eventString); err != nil {
+	if _, err := buffer.Write(fields); err != nil {
 		return nil, err
 	}
 	if _, err := buffer.WriteString("}"); err != nil {
@@ -252,7 +255,45 @@ func (t *textMarshaller) Marshal(entry *Entry) ([]byte, error) {
 			return nil, err
 		}
 	}
-	return []byte(trimSpace(buffer.String())), nil
+	return []byte(trimRightSpace(buffer.String())), nil
+}
+
+func textMarshallerFields(entry *Entry, options TextMarshallerOptions) ([]byte, error) {
+	buffer := bytes.NewBuffer(nil)
+	if !options.NoID {
+		if _, err := buffer.WriteString(fmt.Sprintf("id=%s ", entry.ID)); err != nil {
+			return nil, err
+		}
+	}
+	if !options.NoTime {
+		if _, err := buffer.WriteString(fmt.Sprintf("time=%s ", entry.Time.Format("15:04:05.000000000"))); err != nil {
+			return nil, err
+		}
+	}
+	if !options.NoLevel {
+		if _, err := buffer.WriteString(fmt.Sprintf("level=%s ", strings.ToLower(entry.Level.String()))); err != nil {
+			return nil, err
+		}
+	}
+	if !options.NoContexts {
+		for _, context := range entry.Contexts {
+			contextString, err := textMarshallerObjectString(context)
+			if err != nil {
+				return nil, err
+			}
+			if _, err := buffer.WriteString(fmt.Sprintf("%s ", contextString)); err != nil {
+				return nil, err
+			}
+		}
+	}
+	eventString, err := textMarshallerObjectString(entry.Event)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := buffer.WriteString(eventString); err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
 }
 
 func textMarshallerObjectString(object interface{}) (string, error) {
@@ -269,7 +310,7 @@ func textMarshallerObjectKeyString(object interface{}) (string, error) {
 
 func textMarshallerObjectValueString(object interface{}) string {
 	if stringer, ok := object.(fmt.Stringer); ok {
-		return trimSpace(stringer.String())
+		return trimRightSpace(stringer.String())
 	}
 	objectString := fmt.Sprintf("%+v", object)
 	if len(objectString) > 0 && objectString[0:1] == "&" {
@@ -284,7 +325,7 @@ func textMarshallerObjectValueString(object interface{}) string {
 	return objectString
 }
 
-func trimSpace(s string) string {
+func trimRightSpace(s string) string {
 	return strings.TrimRightFunc(s, unicode.IsSpace)
 }
 
