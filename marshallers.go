@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"sync"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -21,12 +22,91 @@ var (
 	defaultJSONKeys = &jsonKeys{
 		id:           "id",
 		time:         "time",
-		level:        "log_level",
+		level:        "level",
 		eventType:    "event_type",
 		writerOutput: "writer_output",
 	}
 	protoMarshallerInstance = &protoMarshaller{}
 )
+
+type textMarshallerV2 struct {
+	options            TextMarshallerOptions
+	maxWriterOutputLen int
+	lock               *sync.Mutex // TODO(pedge): this is pathetic
+}
+
+func newTextMarshallerV2(
+	options TextMarshallerOptions,
+) *textMarshallerV2 {
+	return &textMarshallerV2{
+		options,
+		0,
+		&sync.Mutex{},
+	}
+}
+
+func (t *textMarshallerV2) Marshal(entry *Entry) ([]byte, error) {
+	buffer := bytes.NewBuffer(nil)
+	writerOutputLen := 0
+	if entry.WriterOutput != nil && len(entry.WriterOutput) > 0 {
+		writerOutput := strings.TrimSpace(string(entry.WriterOutput))
+		if _, err := buffer.Write([]byte(writerOutput)); err != nil {
+			return nil, err
+		}
+		// Is this right? I'm not sure if this is a character count/I don't think it is
+		writerOutputLen = len(writerOutput)
+		if writerOutputLen < 101 {
+			t.lock.Lock()
+			if t.maxWriterOutputLen < writerOutputLen {
+				t.maxWriterOutputLen = writerOutputLen
+			}
+			t.lock.Unlock()
+		}
+	}
+	if writerOutputLen > 100 {
+		if _, err := buffer.WriteString("  "); err != nil {
+			return nil, err
+		}
+	} else if t.maxWriterOutputLen != 0 {
+		if _, err := buffer.WriteString(fmt.Sprintf("%s  ", strings.Repeat(" ", t.maxWriterOutputLen-writerOutputLen))); err != nil {
+			return nil, err
+		}
+	}
+	if !t.options.NoID {
+		if _, err := buffer.WriteString(fmt.Sprintf("id=%s ", entry.ID)); err != nil {
+			return nil, err
+		}
+	}
+	if !t.options.NoTime {
+		if _, err := buffer.WriteString(fmt.Sprintf("time=%s ", entry.Time.Format("15:04:05.000000000"))); err != nil {
+			return nil, err
+		}
+	}
+	if !t.options.NoLevel {
+		if _, err := buffer.WriteString(fmt.Sprintf("level=%s ", strings.ToLower(entry.Level.String()))); err != nil {
+			return nil, err
+		}
+	}
+	if !t.options.NoContexts {
+		for _, context := range entry.Contexts {
+			contextString, err := textMarshallerObjectString(context)
+			if err != nil {
+				return nil, err
+			}
+			if _, err := buffer.WriteString(fmt.Sprintf("%s ", contextString)); err != nil {
+				return nil, err
+			}
+		}
+	}
+	eventString, err := textMarshallerObjectString(entry.Event)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := buffer.WriteString(eventString); err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
+}
 
 type textMarshaller struct {
 	options TextMarshallerOptions
@@ -70,19 +150,21 @@ func (t *textMarshaller) Marshal(entry *Entry) ([]byte, error) {
 			return nil, err
 		}
 	}
-	for _, context := range entry.Contexts {
-		contextString, err := t.objectString(context)
-		if err != nil {
-			return nil, err
-		}
-		if _, err := buffer.WriteString(contextString); err != nil {
-			return nil, err
-		}
-		if _, err := buffer.WriteString(" "); err != nil {
-			return nil, err
+	if !t.options.NoContexts {
+		for _, context := range entry.Contexts {
+			contextString, err := textMarshallerObjectString(context)
+			if err != nil {
+				return nil, err
+			}
+			if _, err := buffer.WriteString(contextString); err != nil {
+				return nil, err
+			}
+			if _, err := buffer.WriteString(" "); err != nil {
+				return nil, err
+			}
 		}
 	}
-	eventString, err := t.objectString(entry.Event)
+	eventString, err := textMarshallerObjectString(entry.Event)
 	if err != nil {
 		return nil, err
 	}
@@ -103,26 +185,33 @@ func (t *textMarshaller) Marshal(entry *Entry) ([]byte, error) {
 	return []byte(strings.TrimSpace(buffer.String())), nil
 }
 
-func (t *textMarshaller) objectString(object interface{}) (string, error) {
-	if object == nil {
-		return "nil", nil
-	}
-	reflectType := reflect.TypeOf(object)
-	typeString, err := shortReflectKey(reflectType)
+func textMarshallerObjectString(object interface{}) (string, error) {
+	keyString, err := textMarshallerObjectKeyString(object)
 	if err != nil {
 		return "", err
 	}
+	return fmt.Sprintf("%s=%s", keyString, textMarshallerObjectValueString(object)), nil
+}
+
+func textMarshallerObjectKeyString(object interface{}) (string, error) {
+	return shortReflectKey(reflect.TypeOf(object))
+}
+
+func textMarshallerObjectValueString(object interface{}) string {
 	if stringer, ok := object.(fmt.Stringer); ok {
-		return fmt.Sprintf("%s=%s", typeString, stringer.String()), nil
+		return strings.TrimSpace(stringer.String())
 	}
 	objectString := fmt.Sprintf("%+v", object)
 	if len(objectString) > 0 && objectString[0:1] == "&" {
 		objectString = objectString[1:]
 	}
-	if len(objectString) > 1 && objectString[0:2] == "{ " {
-		objectString = fmt.Sprintf("{%s", objectString[2:])
+	if strings.HasPrefix(objectString, "{ ") {
+		objectString = fmt.Sprintf("{%s", strings.TrimPrefix(objectString, "{ "))
 	}
-	return fmt.Sprintf("%s=%s", typeString, objectString), nil
+	if strings.HasSuffix(objectString, " }") {
+		objectString = fmt.Sprintf("%s}", strings.TrimSuffix(objectString, " }"))
+	}
+	return objectString
 }
 
 type jsonKeys struct {

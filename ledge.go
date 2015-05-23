@@ -290,6 +290,16 @@ type TextMarshallerOptions struct {
 	NoTime bool
 	// NoLevel will suppress the printing of Entry Levels.
 	NoLevel bool
+	// NoContexts will suppress the printing of Entry Contexts.
+	NoContexts bool
+}
+
+// NewTextMarshallerV2 returns a Marshaller that marshals output in a human-readable manner.
+// This should never be used if an EntryReader or BlockingEntryReader is to be used with the Entry objects.
+func NewTextMarshallerV2(options TextMarshallerOptions) Marshaller {
+	return newTextMarshallerV2(
+		options,
+	)
 }
 
 // NewTextMarshaller returns a Marshaller that marshals output in a human-readable manner.
