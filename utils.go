@@ -4,7 +4,51 @@ import (
 	"bytes"
 	"fmt"
 	"reflect"
+	"strings"
+	"unicode"
+
+	"github.com/mgutz/ansi"
 )
+
+func colorBlue(s string) string {
+	return colorize(s, ansi.Blue)
+}
+
+func colorize(s string, colorCode string) string {
+	return fmt.Sprintf("%s%s%s", colorCode, s, ansi.Reset)
+}
+
+func trimRightSpace(s string) string {
+	return strings.TrimRightFunc(s, unicode.IsSpace)
+}
+
+func trimRightSpaceBytes(p []byte) []byte {
+	return bytes.TrimRightFunc(p, unicode.IsSpace)
+}
+
+func splitIntoLenLines(s string, length int) []string {
+	var lines []string
+	split := strings.Split(s, "\n")
+	for _, elem := range split {
+		if len(elem) <= length {
+			lines = append(lines, padString(elem, length))
+		} else {
+			for len(elem) > length {
+				lines = append(lines, elem[0:length])
+				elem = elem[length:]
+			}
+			lines = append(lines, padString(elem, length))
+		}
+	}
+	return lines
+}
+
+func padString(s string, length int) string {
+	if len(s) >= length {
+		return s
+	}
+	return fmt.Sprintf("%s%s", s, strings.Repeat(" ", length-len(s)))
+}
 
 func mergeSpecifications(specifications []*Specification) *Specification {
 	contextReflectTypeToContext := make(map[reflect.Type]Context)

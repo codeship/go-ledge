@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+const (
+	// DefaultColumns is the default number of columns to use for the V3 text marshaller.
+	DefaultColumns = 100
+)
+
 var (
 	// DebugFilter is a Filter that only includes Entries with a Level of at least Level_DEBUG.
 	DebugFilter = newLevelFilter(Level_DEBUG)
@@ -298,6 +303,15 @@ type TextMarshallerOptions struct {
 // This should never be used if an EntryReader or BlockingEntryReader is to be used with the Entry objects.
 func NewLogrusTextMarshaller(options TextMarshallerOptions) Marshaller {
 	return newLogrusTextMarshaller(
+		options,
+	)
+}
+
+// NewTextMarshallerV3 returns a Marshaller that marshals output in a human-readable manner.
+// This should never be used if an EntryReader or BlockingEntryReader is to be used with the Entry objects.
+func NewTextMarshallerV3(columns int, options TextMarshallerOptions) Marshaller {
+	return newTextMarshallerV3(
+		columns,
 		options,
 	)
 }

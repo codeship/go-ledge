@@ -9,15 +9,16 @@ import (
 	"reflect"
 	"strings"
 	"sync"
-	"unicode"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
+	"github.com/nsf/termbox-go"
 )
 
 const (
 	// TODO(pedge): convert to unix nanos?
-	timeFormat = "2006-01-02 15:04:05.999999999 -0700 MST"
+	timeFormat  = "2006-01-02 15:04:05.999999999 -0700 MST"
+	maxV2Length = 100
 )
 
 var (
@@ -90,7 +91,7 @@ func (l *logrusTextMarshaller) Marshal(entry *Entry) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return []byte(trimRightSpace(string(data))), nil
+	return trimRightSpaceBytes(data), nil
 }
 
 type textMarshallerV3 struct {
@@ -102,10 +103,26 @@ func newTextMarshallerV3(
 	columns int,
 	options TextMarshallerOptions,
 ) *textMarshallerV3 {
+	if columns <= 0 {
+		columns = getNumColumnsForV3()
+	}
+	fmt.Println("COLUMNS: ", columns)
 	return &textMarshallerV3{
 		columns,
 		options,
 	}
+}
+
+func getNumColumnsForV3() int {
+	if err := termbox.Init(); err != nil {
+		return DefaultColumns
+	}
+	defer termbox.Close()
+	columns, _ := termbox.Size()
+	if columns > 0 {
+		return columns
+	}
+	return DefaultColumns
 }
 
 func (t *textMarshallerV3) Marshal(entry *Entry) ([]byte, error) {
@@ -119,13 +136,12 @@ func (t *textMarshallerV3) Marshal(entry *Entry) ([]byte, error) {
 	}
 	fields := string(fieldsBytes)
 
-	length := t.columns / 2
-	if t.columns%2 == 0 {
-		length = (t.columns - 1) / 2
-	}
+	// 103 -> 100/2 -> 50|3|50
+	// 104 -> 101/2 -> 50|30|50
+	length := (t.columns - 3) / 2
 	writerOutputLines := splitIntoLenLines(writerOutput, length)
 	fieldsLines := splitIntoLenLines(fields, length)
-	blankLine := padString("", length)
+	blankLine := strings.Repeat(" ", length)
 
 	var lines []string
 	for i := 0; i < len(writerOutputLines) || i < len(fieldsLines); i++ {
@@ -135,35 +151,11 @@ func (t *textMarshallerV3) Marshal(entry *Entry) ([]byte, error) {
 		}
 		fieldsLine := blankLine
 		if i < len(fieldsLines) {
-			fieldsLine = writerOutputLines[i]
+			fieldsLine = fieldsLines[i]
 		}
-		lines = append(lines, fmt.Sprintf("%s|%s", writerOutputLine, fieldsLine))
+		lines = append(lines, fmt.Sprintf("%s | %s", colorBlue(fieldsLine), writerOutputLine))
 	}
 	return []byte(strings.Join(lines, "\n")), nil
-}
-
-func splitIntoLenLines(s string, length int) []string {
-	var lines []string
-	split := strings.Split(s, "\n")
-	for _, elem := range split {
-		if len(elem) <= length {
-			lines = append(lines, padString(elem, length))
-		} else {
-			for len(elem) > length {
-				lines = append(lines, elem[0:length])
-				elem = elem[length:]
-			}
-			lines = append(lines, padString(elem, length))
-		}
-	}
-	return lines
-}
-
-func padString(s string, length int) string {
-	if len(s) >= length {
-		return s
-	}
-	return fmt.Sprintf("%s%s", s, strings.Repeat(" ", length-len(s)))
 }
 
 type textMarshallerV2 struct {
@@ -192,7 +184,7 @@ func (t *textMarshallerV2) Marshal(entry *Entry) ([]byte, error) {
 		}
 		// Is this right? I'm not sure if this is a character count/I don't think it is
 		writerOutputLen = len(writerOutput)
-		if writerOutputLen < 101 {
+		if writerOutputLen <= maxV2Length {
 			t.lock.Lock()
 			if t.maxWriterOutputLen < writerOutputLen {
 				t.maxWriterOutputLen = writerOutputLen
@@ -200,7 +192,7 @@ func (t *textMarshallerV2) Marshal(entry *Entry) ([]byte, error) {
 			t.lock.Unlock()
 		}
 	}
-	if writerOutputLen > 100 {
+	if writerOutputLen > maxV2Length {
 		if _, err := buffer.WriteString("  "); err != nil {
 			return nil, err
 		}
@@ -255,7 +247,7 @@ func (t *textMarshaller) Marshal(entry *Entry) ([]byte, error) {
 			return nil, err
 		}
 	}
-	return []byte(trimRightSpace(buffer.String())), nil
+	return trimRightSpaceBytes(buffer.Bytes()), nil
 }
 
 func textMarshallerFields(entry *Entry, options TextMarshallerOptions) ([]byte, error) {
@@ -323,10 +315,6 @@ func textMarshallerObjectValueString(object interface{}) string {
 		objectString = fmt.Sprintf("%s}", strings.TrimSuffix(objectString, " }"))
 	}
 	return objectString
-}
-
-func trimRightSpace(s string) string {
-	return strings.TrimRightFunc(s, unicode.IsSpace)
 }
 
 type jsonKeys struct {
