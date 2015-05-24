@@ -89,6 +89,12 @@ func (l *logger) WarnWriter(event Event) io.Writer {
 	return l.printWriter(Level_WARN, event)
 }
 
+func (l *logger) ErrorEvent(err error) {
+	if err != nil {
+		l.Error(&ErrorEvent{err.Error()})
+	}
+}
+
 func (l *logger) print(level Level, event Event) {
 	if err := l.reflectTypeProvider.validateEventReflectType(reflect.TypeOf(event)); err != nil {
 		panic(err.Error())

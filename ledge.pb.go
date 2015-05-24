@@ -10,6 +10,7 @@ It is generated from these files:
 
 It has these top-level messages:
 	UnstructuredEvent
+	ErrorEvent
 	ProtoEntry
 */
 package ledge
@@ -61,6 +62,14 @@ type UnstructuredEvent struct {
 func (m *UnstructuredEvent) Reset()         { *m = UnstructuredEvent{} }
 func (m *UnstructuredEvent) String() string { return proto.CompactTextString(m) }
 func (*UnstructuredEvent) ProtoMessage()    {}
+
+type ErrorEvent struct {
+	Msg string `protobuf:"bytes,1,opt,name=msg" json:"msg,omitempty"`
+}
+
+func (m *ErrorEvent) Reset()         { *m = ErrorEvent{} }
+func (m *ErrorEvent) String() string { return proto.CompactTextString(m) }
+func (*ErrorEvent) ProtoMessage()    {}
 
 type ProtoEntry struct {
 	Id                       string            `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`

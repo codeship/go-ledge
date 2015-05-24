@@ -39,6 +39,7 @@ var (
 	// and BlockingEntryReader by default. These are used for the UnstructuredLogger.
 	DefaultEventTypes = []Event{
 		&UnstructuredEvent{},
+		&ErrorEvent{},
 	}
 
 	globalLogger Logger
@@ -235,6 +236,10 @@ type Logger interface {
 	// inside the WriterOutput field of an Entry, using the associated Event,
 	// at the Warn Level.
 	WarnWriter(event Event) io.Writer
+
+	// ErrorEvent is a convienence method that calls Error using an ErrorEvent
+	// if err is not nil.
+	ErrorEvent(err error)
 }
 
 // Entry is the type that is marshalled and unmarshalled into and from log messages.
