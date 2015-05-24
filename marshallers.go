@@ -106,7 +106,6 @@ func newTextMarshallerV3(
 	if columns <= 0 {
 		columns = getNumColumnsForV3()
 	}
-	fmt.Println("COLUMNS: ", columns)
 	return &textMarshallerV3{
 		columns,
 		options,
