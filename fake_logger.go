@@ -3,6 +3,7 @@ package ledge
 import (
 	"bytes"
 	"fmt"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -16,7 +17,7 @@ type fakeLogger struct {
 func newFakeLogger(
 	specification *Specification,
 ) (*fakeLogger, error) {
-	buffer := bytes.NewBuffer(nil)
+	buffer := newLockedBuffer()
 	unmarshaller, err := NewProtoUnmarshaller(specification)
 	if err != nil {
 		return nil, err
@@ -96,4 +97,28 @@ func (tt *fakeTimer) AddTimeSec(delta int64) {
 
 func (tt *fakeTimer) Now() time.Time {
 	return time.Unix(tt.now, 0)
+}
+
+type lockedBuffer struct {
+	buffer *bytes.Buffer
+	lock   *sync.Mutex
+}
+
+func newLockedBuffer() *lockedBuffer {
+	return &lockedBuffer{
+		bytes.NewBuffer(nil),
+		&sync.Mutex{},
+	}
+}
+
+func (l *lockedBuffer) Read(p []byte) (int, error) {
+	l.lock.Lock()
+	defer l.lock.Unlock()
+	return l.buffer.Read(p)
+}
+
+func (l *lockedBuffer) Write(p []byte) (int, error) {
+	l.lock.Lock()
+	defer l.lock.Unlock()
+	return l.buffer.Write(p)
 }
