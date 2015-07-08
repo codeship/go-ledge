@@ -4,7 +4,6 @@
 	updatedeps \
 	testdeps \
 	updatetestdeps \
-	generate \
 	build \
 	install \
 	lint \
@@ -32,34 +31,34 @@ updatetestdeps:
 	go get -d -v -t -u -f ./...
 
 generate:
-	go generate ./...
+	go ./...
 
-build: deps generate
+build: deps
 	go build ./...
 
-install: deps generate
+install: deps
 	go install ./...
 
-lint: testdeps generate
+lint: testdeps
 	go get -v github.com/golang/lint/golint
 	for file in $$(git ls-files '*.go' | grep -v '\.pb\.go'); do \
 		golint $$file; \
 	done
 
-vet: testdeps generate
+vet: testdeps
 	go get -v golang.org/x/tools/cmd/vet
 	go vet ./...
 
-errcheck: testdeps generate
+errcheck: testdeps
 	go get -v github.com/kisielk/errcheck
 	errcheck ./...
 
 pretest: lint vet errcheck
 
-test: testdeps generate pretest
+test: testdeps pretest
 	go test -test.v ./...
 
-cov: testdeps generate
+cov: testdeps
 	go get -v github.com/axw/gocov/gocov
 	go get golang.org/x/tools/cmd/cover
 	gocov test | gocov report
