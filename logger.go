@@ -101,6 +101,13 @@ func (l *logger) print(level Level, event Event) {
 	}
 	_, err := l.write(l.getEntry(l.getBaseEntry(level, event), nil))
 	if err != nil {
+		if l.options.BackupWriter != nil {
+			_, err := l.options.BackupWriter.Write([]byte(err.Error()))
+			if err != nil {
+				panic(err.Error())
+			}
+			return
+		}
 		panic(err.Error())
 	}
 }

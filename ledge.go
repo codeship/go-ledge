@@ -387,6 +387,10 @@ type LoggerOptions struct {
 	// If not specified, no encoder will be used and marshalled Entry objects
 	// will be directed printed to the Logger's io.Writer with a newline added.
 	Encoder Encoder
+	// BackupWriter specifes a backup location to write errors to if there
+	// are errors writing to the main io.Writer specified on Logger creation.
+	// Otherwise, we have a recursive problem - how do you log an error for a log error?
+	BackupWriter io.Writer
 }
 
 // NewLogger creates a new Logger.
