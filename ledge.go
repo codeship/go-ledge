@@ -1,6 +1,7 @@
 package ledge
 
 import (
+	"bufio"
 	"io"
 	"sync"
 	"time"
@@ -425,7 +426,7 @@ func NewProtoUnmarshaller(specification *Specification) (Unmarshaller, error) {
 // Decoder decodes an input stream into separate byte slices that represent marshalled Entry objects.
 type Decoder interface {
 	// Decode gets the next marshalled Entry object from the input stream.
-	Decode(reader io.Reader) ([]byte, error)
+	Decode(reader *bufio.Reader) ([]byte, error)
 }
 
 // EntryResponse is a response from an EntryReader.
