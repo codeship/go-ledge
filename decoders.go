@@ -1,9 +1,8 @@
 package ledge
 
 import (
-	"bytes"
+	"bufio"
 	"fmt"
-	"io"
 	"strconv"
 )
 
@@ -13,15 +12,17 @@ var (
 
 type rpcDecoder struct{}
 
-func (r *rpcDecoder) Decode(reader io.Reader) ([]byte, error) {
-	sizeBytesLenBuf, err := r.read(reader, 1)
+func (r *rpcDecoder) Decode(bufReader *bufio.Reader) ([]byte, error) {
+	slice, err := bufReader.ReadSlice(separatorBytes[0])
+
 	if err != nil {
 		return nil, err
 	}
-	sizeBytes, err := r.read(reader, int(sizeBytesLenBuf[0]))
-	if err != nil {
-		return nil, err
-	}
+	sizeBytesLenBuf := int64(slice[0])
+	offset := int64(1)
+
+	sizeBytes := slice[offset : offset+sizeBytesLenBuf]
+	offset = offset + sizeBytesLenBuf
 	size, err := strconv.ParseInt(string(sizeBytes), 10, 64)
 	if err != nil {
 		return nil, err
@@ -30,37 +31,12 @@ func (r *rpcDecoder) Decode(reader io.Reader) ([]byte, error) {
 	if int64(sizeInt) != size {
 		return nil, fmt.Errorf("ledge: could not cast %d to an int", size)
 	}
-	data, err := r.read(reader, sizeInt)
-	if err != nil {
-		return nil, err
-	}
+
+	data := slice[offset : offset+size]
+
 	// docker logs do not flush without a newline, this is the hack
-	separatorBuf, err := r.read(reader, 1)
-	if err != nil {
-		return nil, err
-	}
-	if !bytes.Equal(separatorBuf, separatorBytes) {
-		return nil, fmt.Errorf("ledge: expected separator (%v), %v, got (%v) %v", separatorBytes, string(separatorBytes), separatorBuf, string(separatorBuf))
+	if int64(len(data)) > size {
+		return nil, fmt.Errorf("ledge: unexpected data size: %d vs %d - %s", len(data), size, string(slice))
 	}
 	return data, nil
-}
-
-func (r *rpcDecoder) read(reader io.Reader, size int) ([]byte, error) {
-	buffer := make([]byte, size)
-	readSoFar := 0
-	for readSoFar < size {
-		data := make([]byte, size-readSoFar)
-		n, err := reader.Read(data)
-		if err != nil {
-			return nil, err
-		}
-		if n > 0 {
-			m := copy(buffer[readSoFar:readSoFar+n], data[:n])
-			if m != n {
-				return nil, fmt.Errorf("ledge: tried to copy %d bytes, only copied %d bytes", n, m)
-			}
-			readSoFar += n
-		}
-	}
-	return buffer, nil
 }

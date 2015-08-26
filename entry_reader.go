@@ -1,9 +1,12 @@
 package ledge
 
-import "io"
+import (
+	"bufio"
+	"io"
+)
 
 type entryReader struct {
-	reader       io.Reader
+	reader       *bufio.Reader
 	unmarshaller Unmarshaller
 	decoder      Decoder
 	options      EntryReaderOptions
@@ -18,7 +21,7 @@ func newEntryReader(
 	options EntryReaderOptions,
 ) (*entryReader, error) {
 	obj := &entryReader{
-		reader,
+		bufio.NewReader(reader),
 		unmarshaller,
 		decoder,
 		options,
