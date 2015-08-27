@@ -5,6 +5,10 @@ import (
 	"io"
 )
 
+const (
+	readerSize = 64 * 1024
+)
+
 type entryReader struct {
 	reader       *bufio.Reader
 	unmarshaller Unmarshaller
@@ -21,7 +25,7 @@ func newEntryReader(
 	options EntryReaderOptions,
 ) (*entryReader, error) {
 	obj := &entryReader{
-		bufio.NewReader(reader),
+		bufio.NewReaderSize(reader, readerSize),
 		unmarshaller,
 		decoder,
 		options,
