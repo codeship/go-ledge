@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/gob"
+	"fmt"
 	"reflect"
 	"time"
 
@@ -30,12 +31,12 @@ func (p *protoUnmarshaller) Unmarshal(buffer []byte) (*Entry, error) {
 	decoder := base64.NewDecoder(base64.StdEncoding, bytes.NewBuffer(buffer))
 	bBuffer := bytes.NewBuffer(nil)
 	if _, err := bBuffer.ReadFrom(decoder); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to decode buffer: %s - %s", err.Error(), string(buffer))
 	}
 	b := bBuffer.Bytes()
 	protoEntry := &ProtoEntry{}
 	if err := proto.Unmarshal(b, protoEntry); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to unmarshal protobuf: %s - %s", err.Error(), string(b))
 	}
 	entry := &Entry{
 		ID:           protoEntry.Id,
