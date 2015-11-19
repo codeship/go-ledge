@@ -27,6 +27,7 @@ func newFakeLogger(
 		unmarshaller,
 		RPCDecoder,
 		EntryReaderOptions{},
+		100,
 	)
 	if err != nil {
 		return nil, err

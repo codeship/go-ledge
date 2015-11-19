@@ -23,13 +23,14 @@ func newEntryReader(
 	unmarshaller Unmarshaller,
 	decoder Decoder,
 	options EntryReaderOptions,
+	bufferSize int,
 ) (*entryReader, error) {
 	obj := &entryReader{
 		bufio.NewReaderSize(reader, readerSize),
 		unmarshaller,
 		decoder,
 		options,
-		make(chan *EntryResponse),
+		make(chan *EntryResponse, bufferSize),
 		make(chan bool),
 	}
 	go obj.read()
