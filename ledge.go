@@ -452,12 +452,13 @@ type EntryReaderOptions struct {
 }
 
 // NewEntryReader returns a new EntryReader.
-func NewEntryReader(reader io.Reader, unmarshaller Unmarshaller, decoder Decoder, options EntryReaderOptions) (EntryReader, error) {
+func NewEntryReader(reader io.Reader, unmarshaller Unmarshaller, decoder Decoder, options EntryReaderOptions, bufferSize int) (EntryReader, error) {
 	return newEntryReader(
 		reader,
 		unmarshaller,
 		decoder,
 		options,
+		bufferSize,
 	)
 }
 
