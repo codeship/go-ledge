@@ -3,6 +3,11 @@ package ledge
 import (
 	"fmt"
 	"reflect"
+	"strings"
+)
+
+const (
+	vendorSep = "/vendor/"
 )
 
 type reflectTypeProvider struct {
@@ -78,10 +83,23 @@ func (r *reflectTypeProvider) validateReflectType(m map[reflect.Type]bool, refle
 func addToKeyToReflectType(keyToReflectType map[string]reflect.Type, reflectTypes map[reflect.Type]bool, t interface{}) error {
 	reflectType := reflect.TypeOf(t)
 	key, err := getReflectTypeName(reflectType)
+	key = trimVendoring(key)
 	if err != nil {
 		return err
 	}
 	keyToReflectType[key] = reflectType
 	reflectTypes[reflectType] = true
 	return nil
+}
+
+func trimVendoring(key string) string {
+	if strings.Contains(key, vendorSep) {
+		endIndex := strings.Index(key, vendorSep)
+		startIndex := 1
+		if strings.HasPrefix(key, "*") {
+			startIndex = 2
+		}
+		key = key[0:startIndex] + key[endIndex+len(vendorSep):len(key)]
+	}
+	return key
 }
