@@ -68,10 +68,6 @@ checkproto:
 		echo "error: protoc not installed" >&2; \
 		exit 1; \
 	fi
-	@ if [ "$$(protoc --version)" != "libprotoc 3.0.0" ]; then \
-	  echo "error: proto 3 must be installed" >&2; \
-		exit 1; \
-	fi
 
 proto: checkproto
 	go get -u github.com/golang/protobuf/protoc-gen-go
