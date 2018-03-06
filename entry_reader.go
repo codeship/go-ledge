@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	readerSize = 64 * 1024
+	readerSize = 256 * 1024
 )
 
 type entryReader struct {
