@@ -9,5 +9,5 @@ var (
 type rpcDecoder struct{}
 
 func (r *rpcDecoder) Decode(bufReader *bufio.Reader) ([]byte, error) {
-	return bufReader.ReadSlice(separator)
+	return bufReader.ReadBytes(separator)
 }
