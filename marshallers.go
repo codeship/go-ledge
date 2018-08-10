@@ -10,9 +10,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 	"github.com/nsf/termbox-go"
+	"github.com/sirupsen/logrus"
 )
 
 const (
